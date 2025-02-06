@@ -1,8 +1,8 @@
 /********** Template CSS **********/
 :root {
-  --primary: #eb1616;
-  --secondary: #191c24;
-  --light: #6c7293;
+  --primary: #EB1616;
+  --secondary: #191C24;
+  --light: #6C7293;
   --dark: #000000;
 }
 
@@ -14,23 +14,25 @@
   z-index: 99;
 }
 
+
 /*** Spinner ***/
 #spinner {
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+  transition: opacity .5s ease-out, visibility 0s linear .5s;
   z-index: 99999;
 }
 
 #spinner.show {
-  transition: opacity 0.5s ease-out, visibility 0s linear 0s;
+  transition: opacity .5s ease-out, visibility 0s linear 0s;
   visibility: visible;
   opacity: 1;
 }
 
+
 /*** Button ***/
 .btn {
-  transition: 0.5s;
+  transition: .5s;
 }
 
 .btn-square {
@@ -59,6 +61,7 @@
   border-radius: 50px;
 }
 
+
 /*** Layout ***/
 .sidebar {
   position: fixed;
@@ -82,37 +85,38 @@
 
 @media (min-width: 992px) {
   .sidebar {
-    margin-left: 0;
+      margin-left: 0;
   }
 
   .sidebar.open {
-    margin-left: -250px;
+      margin-left: -250px;
   }
 
   .content {
-    width: calc(100% - 250px);
+      width: calc(100% - 250px);
   }
 
   .content.open {
-    width: 100%;
-    margin-left: 0;
+      width: 100%;
+      margin-left: 0;
   }
 }
 
 @media (max-width: 991.98px) {
   .sidebar {
-    margin-left: -250px;
+      margin-left: -250px;
   }
 
   .sidebar.open {
-    margin-left: 0;
+      margin-left: 0;
   }
 
   .content {
-    width: 100%;
-    margin-left: 0;
+      width: 100%;
+      margin-left: 0;
   }
 }
+
 
 /*** Navbar ***/
 .sidebar .navbar .navbar-nav .nav-link {
@@ -154,10 +158,10 @@
   content: "\f107";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
-  transition: 0.5s;
+  transition: .5s;
 }
 
-.sidebar .navbar .dropdown-toggle[aria-expanded="true"]::after {
+.sidebar .navbar .dropdown-toggle[aria-expanded=true]::after {
   transform: rotate(-180deg);
 }
 
@@ -211,18 +215,19 @@
   content: "\f107";
   font-family: "Font Awesome 5 Free";
   font-weight: 900;
-  transition: 0.5s;
+  transition: .5s;
 }
 
-.content .navbar .dropdown-toggle[aria-expanded="true"]::after {
+.content .navbar .dropdown-toggle[aria-expanded=true]::after {
   transform: rotate(-180deg);
 }
 
 @media (max-width: 575.98px) {
   .content .navbar .navbar-nav .nav-link {
-    margin-left: 15px;
+      margin-left: 15px;
   }
 }
+
 
 /*** Date Picker ***/
 .bootstrap-datetimepicker-widget.bottom {
@@ -251,11 +256,13 @@
   border-bottom-color: var(--primary);
 }
 
+
 /*** Testimonial ***/
 .progress .progress-bar {
   width: 0px;
   transition: 2s;
 }
+
 
 /*** Testimonial ***/
 .testimonial-carousel .owl-dots {
@@ -273,7 +280,7 @@
   height: 15px;
   border: 5px solid var(--primary);
   border-radius: 15px;
-  transition: 0.5s;
+  transition: .5s;
 }
 
 .testimonial-carousel .owl-dot.active {
