@@ -2,9 +2,9 @@
 
 # Register your models here.
 from django.contrib import admin
-from .models import CrimeNews, Crimes, CriminalCrime, Criminals
+from .models import CrimeNews, Crime, CriminalCrime, Criminal
 
 admin.site.register(CrimeNews)
-admin.site.register(Crimes)
+admin.site.register(Crime)
 admin.site.register(CriminalCrime)
-admin.site.register(Criminals)
+admin.site.register(Criminal)

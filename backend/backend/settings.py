@@ -5,7 +5,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'your-secret-key-here'
+SECRET_KEY = '1Qz3wHkJA5EyXwQxPSZpLD_e8zQ8-JGliRyWEHdknj1FKyFzl0UFV7oS2vnrZycSJnE'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True  # Set to False in production
@@ -21,9 +21,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
     
     # Add your custom apps here
     'caseconnect',  # Replace with your actual app name
+    'corsheaders',  # For handling CORS
 ]
 
 # MIDDLEWARE (Ensure everything is present)
@@ -35,6 +37,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  #for CORS
+    'django.middleware.common.CommonMiddleware',
 ]
 
 # ROOT URL CONFIGURATION
@@ -99,3 +103,46 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 # DEFAULT AUTO FIELD (Avoids warnings in Django 3.2+)
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Allow frontend to communicate with backend
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5500",  # Update this with your frontend URL
+]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'WARNING',
+            'class': 'logging.FileHandler',
+            'filename': 'django_security.log',
+        },
+    },
+    'loggers': {
+        'django.security': {
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': True,
+        },
+    },
+}
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY="1Qz3wHkJA5EyXwQxPSZpLD_e8zQ8-JGliRyWEHdknj1FKyFzl0UFV7oS2vnrZycSJnE"
+
+DB_PASSWORD = os.getenv("DB_PASSWORD")
