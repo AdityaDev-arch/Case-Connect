@@ -207,3 +207,19 @@
     },
   });
 })(jQuery);
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetch("http://127.0.0.1:8000/api/criminals/")
+    .then((response) => response.json())
+    .then((data) => {
+      let criminalsList = document.getElementById("criminals-list");
+      criminalsList.innerHTML = ""; // Clear previous entries
+
+      data.criminals.forEach((criminal) => {
+        let listItem = document.createElement("li");
+        listItem.textContent = `${criminal.name} - Age: ${criminal.age}`;
+        criminalsList.appendChild(listItem);
+      });
+    })
+    .catch((error) => console.error("Error fetching criminals:", error));
+});

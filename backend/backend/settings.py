@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    "debug_toolbar",
     
     # Add your custom apps here
     'caseconnect',  # Replace with your actual app name
@@ -39,6 +40,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',  #for CORS
     'django.middleware.common.CommonMiddleware',
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+
+]
+CORS_ALLOW_ALL_ORIGINS = True
+
+
+INTERNAL_IPS = [
+    "127.0.0.1",
 ]
 
 # ROOT URL CONFIGURATION
@@ -106,18 +115,23 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Allow frontend to communicate with backend
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5500",  # Update this with your frontend URL
+    "http://localhost:5500",
+    "http://localhost:8000",  # Update this with your frontend URL
 ]
 
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
+    'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ),
-    'DEFAULT_PERMISSION_CLASSES': (
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ),
+    ],
 }
+
+
+
+
 
 LOGGING = {
     'version': 1,
