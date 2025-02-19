@@ -1,4 +1,5 @@
-from django.urls import path
+from django.contrib import admin
+from django.urls import path, include
 from .views import (
     api_overview, home, public_criminal_list,
     CriminalListCreateView, CriminalDetailView,
@@ -9,7 +10,7 @@ from .views import (
 urlpatterns = [
     path('', home, name='home'),
     path('api/', api_overview, name='api_overview'),
-    
+
     # Criminals
     path('api/criminals/', CriminalListCreateView.as_view(), name='criminal-list'),
     path('api/criminals/<int:pk>/', CriminalDetailView.as_view(), name='criminal-detail'),
@@ -24,7 +25,10 @@ urlpatterns = [
 
     # Public Endpoint (For Frontend)
     path('api/public/criminals/', public_criminal_list, name='public-criminal-list'),
-    
+
+    # Admin Panel
     path('admin/', admin.site.urls),
-    path('api/', include('caseconnect.urls')),  
+
+    # 🔹 Only include other app URLs if this is the main `urls.py` (not inside `caseconnect`)
+    # path('api/', include('another_app.urls')),  # Uncomment if you have a different app
 ]

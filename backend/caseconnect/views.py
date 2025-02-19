@@ -66,3 +66,23 @@ def public_criminal_list(request):
     criminals = Criminal.objects.all()
     serializer = CriminalSerializer(criminals, many=True)
     return Response(serializer.data)
+
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+import json
+
+#API for sign up form
+def signup(request):
+    if request.method == "POST":
+        data = json.loads(request.body)
+        username = data.get("username")
+        email = data.get("email")
+        password = data.get("password")
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"error": "Username already taken"}, status=400)
+
+        User.objects.create_user(username=username, email=email, password=password)
+        return JsonResponse({"message": "User registered successfully"}, status=201)
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
