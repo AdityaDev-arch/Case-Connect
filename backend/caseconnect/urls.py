@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from django.urls import path
+from .views import signup, logout, refresh_token, CustomTokenObtainPairView
 from .views import (
     api_overview, home, public_criminal_list,
     CriminalListCreateView, CriminalDetailView,
@@ -31,4 +33,19 @@ urlpatterns = [
 
     # 🔹 Only include other app URLs if this is the main `urls.py` (not inside `caseconnect`)
     # path('api/', include('another_app.urls')),  # Uncomment if you have a different app
+]
+
+urlpatterns = [
+    path('api/signup/', signup, name='signup'),  # Signup API
+        path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', refresh_token, name='token_refresh'),
+    path('api/logout/', logout, name='logout'),
+]
+
+
+urlpatterns = [
+    path('api/signup/', signup, name='signup'),
+    path('api/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', refresh_token, name='token_refresh'),
+    path('api/logout/', logout, name='logout'),
 ]

@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from datetime import timedelta
 
 # BASE DIRECTORY
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     # Add your custom apps here
     'caseconnect',  # Replace with your actual app name
     'corsheaders',  # For handling CORS
+    'rest_framework_simplejwt.token_blacklist',  # For blacklisting tokens
 ]
 
 # MIDDLEWARE (Ensure everything is present)
@@ -160,3 +162,15 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 SECRET_KEY="1Qz3wHkJA5EyXwQxPSZpLD_e8zQ8-JGliRyWEHdknj1FKyFzl0UFV7oS2vnrZycSJnE"
 
 DB_PASSWORD = os.getenv("DB_PASSWORD")
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Adjust as needed
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_COOKIE': 'access_token',  # Cookie name for Access Token
+    'AUTH_COOKIE_REFRESH': 'refresh_token',  # Cookie name for Refresh Token
+    'AUTH_COOKIE_SECURE': True,  # Set to True in production (HTTPS required)
+    'AUTH_COOKIE_HTTP_ONLY': True,
+    'AUTH_COOKIE_SAMESITE': 'Lax',
+}
