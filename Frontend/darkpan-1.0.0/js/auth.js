@@ -1,7 +1,19 @@
 // auth.js - Handles user authentication (signup, login, logout, refresh token)
 
+// ✅ Helper function to show messages
+function showMessage(message, isSuccess = true) {
+  const msgBox = document.getElementById("auth-message");
+  msgBox.innerText = message;
+  msgBox.style.color = isSuccess ? "green" : "red";
+}
+
 // 🔹 Signup Function
 async function signup(username, password) {
+  if (!username || !password) {
+    showMessage("Please enter username and password", false);
+    return;
+  }
+
   try {
     const response = await fetch("http://localhost:8000/api/signup/", {
       method: "POST",
@@ -13,36 +25,48 @@ async function signup(username, password) {
     console.log("Signup Response:", data);
 
     if (response.ok) {
-      alert("Signup successful! You can now log in.");
+      showMessage("Signup successful! You can now log in.");
+      window.location.href = "login.html";
     } else {
-      alert("Signup failed: " + (data.error || "Unknown error"));
+      showMessage("Signup failed: " + (data.error || "Unknown error"), false);
     }
   } catch (error) {
     console.error("Error during signup:", error);
+    showMessage("Error signing up", false);
   }
 }
 
 // 🔹 Login Function
 async function login(username, password) {
+  if (!username || !password) {
+    showMessage("Please enter username and password", false);
+    return;
+  }
+
   try {
     const response = await fetch("http://localhost:8000/api/token/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, password }),
-      credentials: "include", // 🔹 Required for cookies
+      credentials: "include", // ✅ Required for HTTP-only cookies
     });
 
     const data = await response.json();
     console.log("Login Response:", data);
 
     if (response.ok) {
-      alert("Login successful!");
-      window.location.href = "dashboard.html"; // Redirect to dashboard
+      showMessage("Login successful!");
+      sessionStorage.setItem("isLoggedIn", "true"); // ✅ Store login state
+      window.location.href = "dashboard.html";
     } else {
-      alert("Login failed: " + (data.error || "Invalid credentials"));
+      showMessage(
+        "Login failed: " + (data.error || "Invalid credentials"),
+        false
+      );
     }
   } catch (error) {
     console.error("Error during login:", error);
+    showMessage("Error logging in", false);
   }
 }
 
@@ -51,19 +75,23 @@ async function refreshToken() {
   try {
     const response = await fetch("http://localhost:8000/api/token/refresh/", {
       method: "POST",
-      credentials: "include", // 🔹 Required for cookies
+      credentials: "include",
     });
 
     const data = await response.json();
     console.log("Token Refresh Response:", data);
 
     if (response.ok) {
-      alert("Access token refreshed!");
+      showMessage("Access token refreshed!");
     } else {
-      alert("Token refresh failed: " + (data.error || "Invalid refresh token"));
+      showMessage(
+        "Token refresh failed: " + (data.error || "Invalid refresh token"),
+        false
+      );
     }
   } catch (error) {
     console.error("Error refreshing token:", error);
+    showMessage("Error refreshing token", false);
   }
 }
 
@@ -72,18 +100,20 @@ async function logout() {
   try {
     const response = await fetch("http://localhost:8000/api/logout/", {
       method: "POST",
-      credentials: "include", // 🔹 Required for cookies
+      credentials: "include",
     });
 
     console.log("Logout Response:", await response.json());
 
     if (response.ok) {
-      alert("Logged out successfully!");
-      window.location.href = "login.html"; // Redirect to login page
+      showMessage("Logged out successfully!");
+      sessionStorage.removeItem("isLoggedIn"); // ✅ Clear session state
+      window.location.href = "login.html";
     } else {
-      alert("Logout failed!");
+      showMessage("Logout failed!", false);
     }
   } catch (error) {
     console.error("Error during logout:", error);
+    showMessage("Error logging out", false);
   }
 }
