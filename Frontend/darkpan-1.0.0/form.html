@@ -294,6 +294,56 @@
 
     <!-- Template Javascript -->
     <script src="js/main.js"></script>
+   
+    <script>
+     function submitForm(event) {
+    event.preventDefault(); // Prevent page reload
+
+    let formData = new FormData();
+    formData.append("name", document.getElementById("name").value);
+    formData.append("place", document.getElementById("place").value);
+    formData.append("category", document.getElementById("category").value);
+    formData.append("description", document.getElementById("description").value);
+
+    let files = document.getElementById("evidence").files;
+    for (let i = 0; i < files.length; i++) {
+        formData.append("evidence", files[i]); // Append each file
+    }
+
+    fetch("http://127.0.0.1:5000/submit-report", {
+        method: "POST",
+        body: formData, // Automatically sets multipart/form-data
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === "success") {
+            alert(result.message); // Show success message
+        } else {
+            alert("Error: " + result.message); // Show error message
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("An error occurred while submitting the report.");
+    });
+}
+
+// Attach the function to the form's submit event
+document.getElementById("reportForm").addEventListener("submit", submitForm);
+
+    </script>
+
+<form id="reportForm">
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="place" placeholder="Place">
+    <input type="text" id="category" placeholder="Category">
+    <textarea id="description" placeholder="Description"></textarea>
+    <input type="file" id="evidence" multiple>
+    <button type="submit">Submit Report</button>
+</form>
+
+
+
 </body>
 
 </html>
