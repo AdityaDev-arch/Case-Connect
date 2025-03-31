@@ -4,7 +4,7 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from flask_cors import CORS
 import bcrypt
-
+6
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
 
