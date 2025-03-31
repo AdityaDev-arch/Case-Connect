@@ -5,10 +5,11 @@
       "server": "localhost",
       "port": 5432,
       "driver": "PostgreSQL",
-      "name": "PD Local",
+      "name": "PG Local",
       "database": "case_connect",
       "username": "postgres",
-      "password": "aditya@123"
+      "password": "nihar@123",
+      "connectionTimeout": 30
     }
   ]
 }
