@@ -120,13 +120,27 @@ if __name__ == "__main__":
     app.run(debug=True)
     --------------------------------------------------
 '''
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import os
 import psycopg2
 from flask_cors import CORS
 
-app = Flask(__name__)
+
+# Get the absolute path of the parent directory
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+app = Flask(__name__, template_folder=os.path.join(parent_dir, "templates"))
 CORS(app)
+
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/home')
+def gotohome():
+    return render_template("home.html")
+
 
 UPLOAD_FOLDER = 'uploads'  # Folder to store uploaded files
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -140,7 +154,10 @@ DB_CONFIG = {
 }
 
 def connect_db():
-    return psycopg2.connect(**DB_CONFIG)
+    return psycopg2.connect(**DB_CONFIG) 
+
+
+
 
 @app.route("/submit-report", methods=["POST"])
 def submit_report():
