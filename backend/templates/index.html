@@ -97,18 +97,30 @@
             </div>
           </div>
           <div class="navbar-nav w-100">
-            <a href="{{ url_for('home') }}" class="nav-item nav-link"
-              ><i class="fa fa-tachometer-alt me-2"></i>Home</a
+            <a
+              href="{{ url_for('home') }}"
+              class="nav-item nav-link {% if request.endpoint == 'home' %}active{% endif %}"
             >
-            <a href="{{ url_for('latestcrime') }}" class="nav-item nav-link"
-              ><i class="fa fa-th me-2"></i>Latest News</a
+              <i class="fa fa-tachometer-alt me-2"></i>Home
+            </a>
+            <a
+              href="{{ url_for('latestcrime') }}"
+              class="nav-item nav-link {% if request.endpoint == 'latestcrime' %}active{% endif %}"
             >
-            <a href="{{ url_for('gotohome') }}" class="nav-item nav-link active"
-              ><i class="fa fa-keyboard me-2"></i>Report Crime</a
+              <i class="fa fa-th me-2"></i>Latest News
+            </a>
+            <a
+              href="{{ url_for('gotohome') }}"
+              class="nav-item nav-link {% if request.endpoint == 'gotohome' %}active{% endif %}"
             >
-            <a href="{{ url_for('gototable') }}" class="nav-item nav-link"
-              ><i class="fa fa-table me-2"></i>Criminal Details</a
+              <i class="fa fa-keyboard me-2"></i>Report Crime
+            </a>
+            <a
+              href="{{ url_for('gototable') }}"
+              class="nav-item nav-link {% if request.endpoint == 'gototable' %}active{% endif %}"
             >
+              <i class="fa fa-table me-2"></i>Criminal Details
+            </a>
           </div>
         </nav>
       </div>
