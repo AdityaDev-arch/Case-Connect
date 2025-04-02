@@ -40,6 +40,16 @@
       dots: true,
       loop: true,
       nav: false,
+      onInitialized: function () {
+        // Limit the number of dots to a maximum of 5
+        const maxDots = 5;
+        const dotsContainer = $(".owl-dots");
+        const dots = dotsContainer.children();
+
+        if (dots.length > maxDots) {
+          dots.slice(maxDots).remove(); // Remove extra dots
+        }
+      },
     });
   }
 
@@ -48,7 +58,9 @@
     const apiKey = "22ff55cf5fe5489ca46c93d6e67b552f"; // ❌ Expose API key (Use backend instead)
     const newsContainer = document.getElementById("latest-crime-news");
 
-    fetch(`https://newsapi.org/v2/everything?q=crime&apiKey=${apiKey}`)
+    fetch(
+      `https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=${apiKey}`
+    )
       .then((response) => response.json())
       .then((data) => {
         if (data.articles && data.articles.length > 0) {
@@ -56,13 +68,13 @@
             const newsItem = document.createElement("div");
             newsItem.classList.add("testimonial-item", "text-center");
             newsItem.innerHTML = `
-                <img class="img-fluid rounded-circle mx-auto mb-4" src="${
-                  article.urlToImage || "img/default-user.png"
-                }" style="width: 100px; height: 100px" />
-                <h5 class="mb-1">${article.title}</h5>
-                <p>${article.source.name}</p>
-                <p class="mb-0">${article.description || ""}</p>
-              `;
+              <img class="img-fluid rounded-circle mx-auto mb-4" src="${
+                article.urlToImage || "img/default-user.png"
+              }" style="width: 100px; height: 100px" />
+              <h5 class="mb-1">${article.title}</h5>
+              <p>${article.source.name}</p>
+              <p class="mb-0">${article.description || ""}</p>
+            `;
             newsContainer.appendChild(newsItem);
           });
 

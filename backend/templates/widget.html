@@ -82,19 +82,30 @@
             </div>
           </div>
           <div class="navbar-nav w-100">
-            <a href="{{ url_for('home') }}" class="nav-item nav-link {% if request.endpoint == 'home' %}active{% endif %}">
+            <a
+              href="{{ url_for('home') }}"
+              class="nav-item nav-link {% if request.endpoint == 'home' %}active{% endif %}"
+            >
               <i class="fa fa-tachometer-alt me-2"></i>Home
             </a>
-            <a href="{{ url_for('latestcrime') }}" class="nav-item nav-link {% if request.endpoint == 'latestcrime' %}active{% endif %}">
+            <a
+              href="{{ url_for('latestcrime') }}"
+              class="nav-item nav-link {% if request.endpoint == 'latestcrime' %}active{% endif %}"
+            >
               <i class="fa fa-th me-2"></i>Latest News
             </a>
-            <a href="{{ url_for('gotohome') }}" class="nav-item nav-link {% if request.endpoint == 'gotohome' %}active{% endif %}">
+            <a
+              href="{{ url_for('gotohome') }}"
+              class="nav-item nav-link {% if request.endpoint == 'gotohome' %}active{% endif %}"
+            >
               <i class="fa fa-keyboard me-2"></i>Report Crime
             </a>
-            <a href="{{ url_for('gototable') }}" class="nav-item nav-link {% if request.endpoint == 'gototable' %}active{% endif %}">
+            <a
+              href="{{ url_for('gototable') }}"
+              class="nav-item nav-link {% if request.endpoint == 'gototable' %}active{% endif %}"
+            >
               <i class="fa fa-table me-2"></i>Criminal Details
             </a>
-          </div>
           </div>
         </nav>
       </div>
@@ -106,15 +117,12 @@
         <nav
           class="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0"
         >
-          <a
-            href="{{ url_for('home') }}"
-            class="navbar-brand d-flex d-lg-none me-4"
-          >
+          <a href="index.html" class="navbar-brand d-flex d-lg-none me-4">
             <h2 class="text-primary mb-0"><i class="fa fa-user-edit"></i></h2>
           </a>
-          <a href="#" class="sidebar-toggler flex-shrink-0"
-            ><i class="fa fa-bars"></i
-          ></a>
+          <a href="#" class="sidebar-toggler flex-shrink-0">
+            <i class="fa fa-bars"></i>
+          </a>
           <form class="d-none d-md-flex ms-4">
             <input
               class="form-control bg-dark border-0"
@@ -122,6 +130,89 @@
               placeholder="Search"
             />
           </form>
+          <div class="navbar-nav align-items-center ms-auto">
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link dropdown-toggle"
+                data-bs-toggle="dropdown"
+              >
+                <i class="fa fa-envelope me-lg-2"></i>
+                <span class="d-none d-lg-inline-flex">Message</span>
+              </a>
+              <div
+                class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0"
+              >
+                <a href="#" class="dropdown-item">
+                  <div class="d-flex align-items-center">
+                    <img
+                      class="rounded-circle"
+                      src="{{ url_for('static', filename='img/default-user.png') }}"
+                      alt=""
+                      style="width: 40px; height: 40px"
+                    />
+                    <div class="ms-2">
+                      <h6 class="fw-normal mb-0">Jhon sent you a message</h6>
+                      <small>15 minutes ago</small>
+                    </div>
+                  </div>
+                </a>
+                <hr class="dropdown-divider" />
+                <a href="#" class="dropdown-item text-center"
+                  >See all messages</a
+                >
+              </div>
+            </div>
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link dropdown-toggle"
+                data-bs-toggle="dropdown"
+              >
+                <i class="fa fa-bell me-lg-2"></i>
+                <span class="d-none d-lg-inline-flex">Notification</span>
+              </a>
+              <div
+                class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0"
+              >
+                <a href="#" class="dropdown-item">
+                  <h6 class="fw-normal mb-0">Profile updated</h6>
+                  <small>15 minutes ago</small>
+                </a>
+                <hr class="dropdown-divider" />
+                <a href="#" class="dropdown-item">
+                  <h6 class="fw-normal mb-0">New user added</h6>
+                  <small>15 minutes ago</small>
+                </a>
+                <hr class="dropdown-divider" />
+                <a href="#" class="dropdown-item text-center"
+                  >See all notifications</a
+                >
+              </div>
+            </div>
+            <div class="nav-item dropdown">
+              <a
+                href="#"
+                class="nav-link dropdown-toggle"
+                data-bs-toggle="dropdown"
+              >
+                <img
+                  class="rounded-circle me-lg-2"
+                  src="{{ url_for('static', filename='img/default-user.png') }}"
+                  alt=""
+                  style="width: 40px; height: 40px"
+                />
+                <span class="d-none d-lg-inline-flex">Username</span>
+              </a>
+              <div
+                class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0"
+              >
+                <a href="#" class="dropdown-item">My Profile</a>
+                <a href="#" class="dropdown-item">Settings</a>
+                <a href="#" class="dropdown-item">Log Out</a>
+              </div>
+            </div>
+          </div>
         </nav>
         <!-- Navbar End -->
 
@@ -143,7 +234,7 @@
               <div class="bg-secondary rounded h-100 p-4">
                 <iframe
                   class="position-relative rounded w-100 h-100"
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3001156.4288297426!2d-78.01371936852176!3d42.72876761954724!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4ccc4bf0f123a5a9%3A0xddcfc6c1de189567!2sNew%20York%2C%20USA!5e0!3m2!1sen!2sbd!4v1603794290143!5m2!1sen!2sbd"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31072809.922922723!2d68.14712!3d20.593684!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bcb93a7c8b9e8b5%3A0x3c3c3c3c3c3c3c3c!2sIndia!5e0!3m2!1sen!2sin!4v1610000000000!5m2!1sen!2sin"
                   frameborder="0"
                   allowfullscreen=""
                   aria-hidden="false"
@@ -199,7 +290,10 @@
         const apiKey = "22ff55cf5fe5489ca46c93d6e67b552f"; // Replace with your News API key
         const newsContainer = document.getElementById("latest-crime-news");
 
-        fetch(`https://newsapi.org/v2/everything?q=crime&apiKey=${apiKey}`)
+        // Use the /top-headlines endpoint with the country parameter set to 'in' for India
+        fetch(
+          `https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=${apiKey}`
+        )
           .then((response) => response.json())
           .then((data) => {
             if (data.articles && data.articles.length > 0) {
@@ -240,6 +334,16 @@
                 autoplayHoverPause: true,
                 touchDrag: true,
                 mouseDrag: true,
+                onInitialized: function (event) {
+                  // Limit the number of dots to a maximum of 5
+                  const maxDots = 5;
+                  const dotsContainer = $(".owl-dots");
+                  const dots = dotsContainer.children();
+
+                  if (dots.length > maxDots) {
+                    dots.slice(maxDots).remove(); // Remove extra dots
+                  }
+                },
               });
             } else {
               newsContainer.innerHTML = "<p>No news articles found.</p>";
