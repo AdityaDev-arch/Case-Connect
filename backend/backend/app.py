@@ -1,4 +1,5 @@
-from flask import Flask, request, jsonify, render_template, url_for
+from flask import Flask, redirect, request, jsonify, render_template, session, url_for, flash
+from flask_login import login_required
 import os
 import psycopg2
 from flask_cors import CORS
@@ -36,6 +37,33 @@ def gotohome():
 def gototable():
     return render_template("table.html")
 
+#route to login page when clicked on logout option
+@app.route('/logout')
+def logout():
+    session.clear()  # Clear the user's session
+    return redirect(url_for('signin'))  # Redirect to the sign-in page
+
+#route for profile 
+@app.route('/profile')
+@login_required
+def profile():
+    user = session.get('user')  # Fetch the logged-in user's details from the session
+    return render_template('profile.html', user=user)
+
+#route for settings
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    user = session.get('user')  # Fetch the logged-in user's details from the session
+    if request.method == 'POST':
+        # Update user details
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        update_user_details(user['id'], username, email, password)
+        flash('Settings updated successfully!', 'success')
+        return redirect(url_for('settings'))
+    return render_template('settings.html', user=user)
 
 # Folder to store uploaded files
 UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')  # Ensure uploads folder is in the correct location
@@ -53,6 +81,26 @@ DB_CONFIG = {
 # Function to connect to the database
 def connect_db():
     return psycopg2.connect(**DB_CONFIG)
+
+# Function to update user details in the database
+def update_user_details(user_id, username, email, password):
+    try:
+        conn = connect_db()
+        cursor = conn.cursor()
+
+        # Update user details in the database
+        cursor.execute("""
+            UPDATE users
+            SET username = %s, email = %s, password = %s
+            WHERE id = %s
+        """, (username, email, password, user_id))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error updating user details: {e}")
+        raise
 
 # Route to handle crime report submission
 @app.route("/submit-report", methods=["POST"])

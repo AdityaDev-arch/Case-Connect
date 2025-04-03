@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>My Profile</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>My Profile</h1>
+      <div class="profile-info">
+        <img
+          src="{{ url_for('static', filename='img/default-user.png') }}"
+          alt="Profile Picture"
+          class="rounded-circle"
+          style="width: 100px; height: 100px"
+        />
+        <h2>{{ user.username }}</h2>
+        <p>Email: {{ user.email }}</p>
+        <p>Role: {{ user.role }}</p>
+        <p>Account Created: {{ user.created_at }}</p>
+      </div>
+    </div>
+  </body>
+</html>

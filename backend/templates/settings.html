@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Settings</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Settings</h1>
+      <form method="POST" action="{{ url_for('update_settings') }}">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            name="username"
+            class="form-control"
+            value="{{ user.username }}"
+          />
+        </div>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            class="form-control"
+            value="{{ user.email }}"
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">New Password</label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-control"
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </form>
+    </div>
+  </body>
+</html>
