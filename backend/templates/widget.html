@@ -52,6 +52,13 @@
       href="{{ url_for('static', filename='css/style.css') }}"
       rel="stylesheet"
     />
+
+    <style>
+      /* Ensure Owl Carousel dots are hidden */
+      .owl-dots {
+        display: none !important;
+      }
+    </style>
   </head>
 
   <body>
@@ -284,75 +291,88 @@
     <!-- Template Javascript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script>
-      $(document).ready(function () {
-        console.log("jQuery is loaded and working!");
-
-        const apiKey = "22ff55cf5fe5489ca46c93d6e67b552f"; // Replace with your News API key
+      document.addEventListener("DOMContentLoaded", function () {
+        const rssUrl = "/fetch-rss"; // Backend endpoint to fetch RSS feed
         const newsContainer = document.getElementById("latest-crime-news");
 
-        // Use the /top-headlines endpoint with the country parameter set to 'in' for India
-        fetch(
-          `https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=${apiKey}`
-        )
-          .then((response) => response.json())
+        console.log("Fetching RSS feed from:", rssUrl); // Debug: Log the RSS URL
+
+        // Fetch the RSS feed
+        fetch(rssUrl)
+          .then((response) => response.text()) // Parse as text since it's XML
           .then((data) => {
-            if (data.articles && data.articles.length > 0) {
-              data.articles.forEach((article) => {
+            console.log("Raw RSS Feed Data:", data); // Debug: Log raw RSS feed data
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(data, "text/xml");
+            console.log("Parsed XML:", xml); // Debug: Log the parsed XML
+            const items = xml.getElementsByTagName("item");
+            console.log("Parsed Items:", items); // Debug: Log the parsed items
+
+            // Process each news item
+            Array.from(items).forEach((item, index) => {
+              console.log(`Item ${index}:`, item); // Log each item
+              const title =
+                item.querySelector("title")?.textContent || "No Title";
+              const link = item.querySelector("link")?.textContent || "#";
+              const pubDate =
+                item.querySelector("pubDate")?.textContent || "No Date";
+
+              console.log(
+                `Title: ${title}, Link: ${link}, PubDate: ${pubDate}`
+              ); // Debug each field
+
+              if (title && link && pubDate) {
                 const newsItem = document.createElement("div");
                 newsItem.classList.add("testimonial-item", "text-center");
                 newsItem.innerHTML = `
-                  <img class="img-fluid rounded-circle mx-auto mb-4" src="${
-                    article.urlToImage ||
-                    "{{ url_for('static', filename='img/default-user.png') }}"
-                  }" style="width: 100px; height: 100px" />
-                  <h5 class="mb-1">${article.title}</h5>
-                  <p>${article.source.name}</p>
-                  <p class="mb-0">${article.description || ""}</p>
+                  <h5 class="mb-1">${title}</h5>
+                  <p>${pubDate}</p>
+                  <a href="${link}" target="_blank">Read more</a>
                 `;
                 newsContainer.appendChild(newsItem);
-              });
+                console.log("Appended news item:", newsItem); // Debug appended item
+              }
+            });
 
-              // Initialize the carousel after adding the news items
-              $(".owl-carousel").owlCarousel({
-                loop: true,
-                margin: 10,
-                nav: true,
-                dots: true,
-                responsive: {
-                  0: {
-                    items: 1,
-                  },
-                  600: {
-                    items: 1,
-                  },
-                  1000: {
-                    items: 1,
-                  },
-                },
-                autoplay: true,
-                autoplayTimeout: 5000,
-                autoplayHoverPause: true,
-                touchDrag: true,
-                mouseDrag: true,
-                onInitialized: function (event) {
-                  // Limit the number of dots to a maximum of 5
-                  const maxDots = 5;
-                  const dotsContainer = $(".owl-dots");
-                  const dots = dotsContainer.children();
-
-                  if (dots.length > maxDots) {
-                    dots.slice(maxDots).remove(); // Remove extra dots
-                  }
-                },
-              });
-            } else {
+            // Check if the carousel has items after processing all news items
+            if (newsContainer.children.length === 0) {
+              console.log(
+                "No news articles to display. Skipping carousel initialization."
+              );
               newsContainer.innerHTML = "<p>No news articles found.</p>";
+              return;
             }
+
+            // Initialize the carousel after all items are appended
+            initializeCarousel();
           })
           .catch((error) => {
-            console.error("Error fetching news:", error);
+            console.error("Error fetching RSS feed:", error);
             newsContainer.innerHTML = "<p>Error fetching news articles.</p>";
           });
+
+        // Function to initialize the Owl Carousel
+        function initializeCarousel() {
+          const owlCarousel = $(".owl-carousel");
+          owlCarousel.owlCarousel({
+            loop: true,
+            margin: 10,
+            nav: true,
+            dots: false, // Disable dots
+            responsive: {
+              0: { items: 1 },
+              600: { items: 1 },
+              1000: { items: 1 },
+            },
+            autoplay: true,
+            autoplayTimeout: 2000, // Slide every 2 seconds
+            autoplayHoverPause: true,
+            touchDrag: true,
+            mouseDrag: true,
+          });
+
+          console.log("Carousel initialized successfully.");
+        }
       });
     </script>
   </body>

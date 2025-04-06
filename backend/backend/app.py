@@ -3,6 +3,7 @@ from flask_login import login_required
 import os
 import psycopg2
 from flask_cors import CORS
+import requests
 
 # Get the absolute path of the parent directory
 parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -20,37 +21,35 @@ CORS(app)
 def home():
     return render_template('index.html')
 
-#route for latest crime page
+# Route for the latest crime page
 @app.route('/widget')
 def latestcrime():
     return render_template("widget.html")
-
-
 
 # Route for another page (example)
 @app.route('/form')
 def gotohome():
     return render_template("form.html")
 
-#route for table page
+# Route for the table page
 @app.route('/table')
 def gototable():
     return render_template("table.html")
 
-#route to login page when clicked on logout option
+# Route to login page when clicked on logout option
 @app.route('/logout')
 def logout():
     session.clear()  # Clear the user's session
     return redirect(url_for('signin'))  # Redirect to the sign-in page
 
-#route for profile 
+# Route for profile
 @app.route('/profile')
 @login_required
 def profile():
     user = session.get('user')  # Fetch the logged-in user's details from the session
     return render_template('profile.html', user=user)
 
-#route for settings
+# Route for settings
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
@@ -64,6 +63,19 @@ def settings():
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('settings'))
     return render_template('settings.html', user=user)
+
+# Route for fetching news
+@app.route('/fetch-rss', methods=['GET'])
+def fetch_rss():
+    # RSS feed URL
+    rss_url = "https://news.google.com/rss/search?q=crime+India&hl=en-IN&gl=IN&ceid=IN:en"
+    try:
+        # Fetch the RSS feed
+        response = requests.get(rss_url)
+        response.raise_for_status()  # Raise an error for bad responses
+        return response.content, response.status_code, {'Content-Type': 'application/xml'}
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 # Folder to store uploaded files
 UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')  # Ensure uploads folder is in the correct location
