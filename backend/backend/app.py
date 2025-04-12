@@ -1,5 +1,5 @@
 from flask import Flask, redirect, request, jsonify, render_template, session, url_for, flash
-from flask_login import login_required
+from flask_login import LoginManager, login_required, logout_user, login_user, UserMixin, current_user
 import os
 import psycopg2
 from flask_cors import CORS
@@ -14,7 +14,52 @@ app = Flask(
     template_folder=os.path.join(parent_dir, "templates"),
     static_folder=os.path.join(parent_dir, "static")  # Explicitly set the static folder
 )
+app.secret_key = "your_secret_key"  # Replace with a secure secret key
 CORS(app)
+
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = "signin"  # Redirect to this route if login is required
+login_manager.login_message = "Please log in to access this page."
+
+# Database configuration
+DB_CONFIG = {
+    "dbname": "case_connect",
+    "user": "postgres",
+    "password": "nihar@123",
+    "host": "localhost",
+    "port": "5432"
+}
+
+# Folder to store uploaded files
+UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')  # Ensure uploads folder is in the correct location
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Function to connect to the database
+def connect_db():
+    return psycopg2.connect(**DB_CONFIG)
+
+# User class for Flask-Login
+class User(UserMixin):
+    def __init__(self, id, username, email):
+        self.id = id
+        self.username = username
+        self.email = email
+
+# User loader function for Flask-Login
+@login_manager.user_loader
+def load_user(user_id):
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (user_id,))
+    user_data = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if user_data:
+        return User(id=user_data[0], username=user_data[1], email=user_data[2])
+    return None
 
 # Route for the homepage
 @app.route('/')
@@ -39,30 +84,30 @@ def gototable():
 # Route to login page when clicked on logout option
 @app.route('/logout')
 def logout():
+    logout_user()  # Logs out the current user
     session.clear()  # Clear the user's session
+    flash('You have been logged out.', 'success')
     return redirect(url_for('signin'))  # Redirect to the sign-in page
 
 # Route for profile
 @app.route('/profile')
 @login_required
 def profile():
-    user = session.get('user')  # Fetch the logged-in user's details from the session
-    return render_template('profile.html', user=user)
+    return render_template('profile.html', user=current_user)
 
 # Route for settings
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
 def settings():
-    user = session.get('user')  # Fetch the logged-in user's details from the session
     if request.method == 'POST':
         # Update user details
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        update_user_details(user['id'], username, email, password)
+        update_user_details(current_user.id, username, email, password)
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('settings'))
-    return render_template('settings.html', user=user)
+    return render_template('settings.html', user=current_user)
 
 # Route for fetching news
 @app.route('/fetch-rss', methods=['GET'])
@@ -71,28 +116,67 @@ def fetch_rss():
     rss_url = "https://news.google.com/rss/search?q=crime+India&hl=en-IN&gl=IN&ceid=IN:en"
     try:
         # Fetch the RSS feed
-        response = requests.get(rss_url)
+        response = requests.get(rss_url, headers={"Cache-Control": "no-cache"})
         response.raise_for_status()  # Raise an error for bad responses
         return response.content, response.status_code, {'Content-Type': 'application/xml'}
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to fetch RSS feed: {str(e)}"}), 500
 
-# Folder to store uploaded files
-UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')  # Ensure uploads folder is in the correct location
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Route for sign-in
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
 
-# Database configuration
-DB_CONFIG = {
-    "dbname": "case_connect",
-    "user": "postgres",
-    "password": "nihar@123",
-    "host": "localhost",
-    "port": "5432"
-}
+        # Validate user credentials
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, email FROM users WHERE username = %s AND password = %s", (username, password))
+        user_data = cursor.fetchone()
+        cursor.close()
+        conn.close()
 
-# Function to connect to the database
-def connect_db():
-    return psycopg2.connect(**DB_CONFIG)
+        if user_data:
+            user = User(id=user_data[0], username=user_data[1], email=user_data[2])
+            login_user(user)
+            flash('Logged in successfully!', 'success')
+            return redirect(url_for('profile'))
+        else:
+            flash('Invalid username or password', 'danger')
+
+    return render_template('signin.html')
+
+# Route for sign-up
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        # Handle sign-up form submission
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        role = request.form['role']  # Capture the role from the form
+
+        try:
+            conn = connect_db()
+            cursor = conn.cursor()
+
+            # Insert the new user into the database with the role
+            cursor.execute("""
+                INSERT INTO users (username, email, password, role)
+                VALUES (%s, %s, %s, %s)
+            """, (username, email, password, role))
+
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            flash('Account created successfully! Please sign in.', 'success')
+            return redirect(url_for('signin'))
+        except Exception as e:
+            flash(f'Error creating account: {str(e)}', 'danger')
+
+    return render_template('signup.html')
 
 # Function to update user details in the database
 def update_user_details(user_id, username, email, password):

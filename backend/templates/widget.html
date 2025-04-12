@@ -290,6 +290,7 @@
 
     <!-- Template Javascript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const rssUrl = "/fetch-rss"; // Backend endpoint to fetch RSS feed
@@ -308,8 +309,23 @@
             const items = xml.getElementsByTagName("item");
             console.log("Parsed Items:", items); // Debug: Log the parsed items
 
-            // Process each news item
-            Array.from(items).forEach((item, index) => {
+            // Clear existing news items
+            newsContainer.innerHTML = "";
+
+            // Filter duplicate news items based on title
+            const uniqueTitles = new Set();
+            const uniqueItems = Array.from(items).filter((item) => {
+              const title =
+                item.querySelector("title")?.textContent || "No Title";
+              if (uniqueTitles.has(title)) {
+                return false; // Skip duplicates
+              }
+              uniqueTitles.add(title);
+              return true;
+            });
+
+            // Process each unique news item
+            uniqueItems.forEach((item, index) => {
               console.log(`Item ${index}:`, item); // Log each item
               const title =
                 item.querySelector("title")?.textContent || "No Title";
