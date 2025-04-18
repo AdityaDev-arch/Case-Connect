@@ -40,52 +40,43 @@
       dots: true,
       loop: true,
       nav: false,
-      onInitialized: function () {
-        // Limit the number of dots to a maximum of 5
-        const maxDots = 5;
-        const dotsContainer = $(".owl-dots");
-        const dots = dotsContainer.children();
-
-        if (dots.length > maxDots) {
-          dots.slice(maxDots).remove(); // Remove extra dots
-        }
+      responsive: {
+        0: { items: 1 }, // 1 item for small screens
+        600: { items: 2 }, // 2 items for medium screens
+        1000: { items: 3 }, // 3 items for large screens
       },
     });
+    console.log("Carousel initialized successfully.");
   }
 
   // 🔹 Fetch Latest Crime News
   document.addEventListener("DOMContentLoaded", function () {
-    const apiKey = "22ff55cf5fe5489ca46c93d6e67b552f"; // ❌ Expose API key (Use backend instead)
+    const rssUrl = "/fetch-rss"; // Backend endpoint to fetch RSS feed
     const newsContainer = document.getElementById("latest-crime-news");
 
-    fetch(
-      `https://newsapi.org/v2/top-headlines?country=in&category=general&apiKey=${apiKey}`
-    )
+    fetch(rssUrl)
       .then((response) => response.json())
-      .then((data) => {
-        if (data.articles && data.articles.length > 0) {
-          data.articles.forEach((article) => {
+      .then((articles) => {
+        if (articles.length > 0) {
+          articles.forEach((article) => {
             const newsItem = document.createElement("div");
-            newsItem.classList.add("testimonial-item", "text-center");
+            newsItem.classList.add("item"); // Add the 'item' class required by Owl Carousel
             newsItem.innerHTML = `
-              <img class="img-fluid rounded-circle mx-auto mb-4" src="${
-                article.urlToImage || "img/default-user.png"
-              }" style="width: 100px; height: 100px" />
               <h5 class="mb-1">${article.title}</h5>
-              <p>${article.source.name}</p>
-              <p class="mb-0">${article.description || ""}</p>
+              <p>${article.published}</p>
+              <a href="${article.link}" target="_blank">Read more</a>
             `;
             newsContainer.appendChild(newsItem);
           });
 
-          // ✅ Initialize carousel **AFTER** adding news items
+          // Initialize carousel after adding news items
           initializeCarousel();
         } else {
           newsContainer.innerHTML = "<p>No news articles found.</p>";
         }
       })
       .catch((error) => {
-        console.error("Error fetching news:", error);
+        console.error("Error fetching RSS feed:", error);
         newsContainer.innerHTML = "<p>Error fetching news articles.</p>";
       });
   });

@@ -1,247 +1,268 @@
-from flask import Flask, redirect, request, jsonify, render_template, session, url_for, flash
-from flask_login import LoginManager, login_required, logout_user, login_user, UserMixin, current_user
+from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+import firebase_admin
+from firebase_admin import auth, credentials
 import os
 import psycopg2
+import jwt
+from flask_bcrypt import Bcrypt
+from datetime import datetime, timedelta
+from functools import wraps
 from flask_cors import CORS
-import requests
+from dotenv import load_dotenv
 
-# Get the absolute path of the parent directory
-parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+# Load environment variables from .env file
+load_dotenv()
 
-# Initialize Flask app
+# Initialize Flask app with custom templates and static folder paths
 app = Flask(
     __name__,
-    template_folder=os.path.join(parent_dir, "templates"),
-    static_folder=os.path.join(parent_dir, "static")  # Explicitly set the static folder
+    template_folder=os.path.join(os.path.dirname(__file__), '../templates'),
+    static_folder=os.path.join(os.path.dirname(__file__), '../static')
 )
-app.secret_key = "your_secret_key"  # Replace with a secure secret key
+app.secret_key = os.getenv("SECRET_KEY", "your_secret_key")  # Use environment variable for security
 CORS(app)
+bcrypt = Bcrypt(app)
 
-# Initialize Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = "signin"  # Redirect to this route if login is required
-login_manager.login_message = "Please log in to access this page."
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate(r"C:\Users\adity\Downloads\caseconnect-87388-firebase-adminsdk-fbsvc-aeff129314.json")
+firebase_admin.initialize_app(cred)
+
+# JWT Configuration
+JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret_key")  # Use environment variable for security
+JWT_ALGORITHM = "HS256"
 
 # Database configuration
 DB_CONFIG = {
-    "dbname": "case_connect",
-    "user": "postgres",
-    "password": "nihar@123",
-    "host": "localhost",
-    "port": "5432"
+    "dbname": os.getenv("DB_NAME", "case_connect"),
+    "user": os.getenv("DB_USER", "postgres"),
+    "password": os.getenv("DB_PASSWORD", "nihar@123"),
+    "host": os.getenv("DB_HOST", "152.58.30.93"),
+    "port": os.getenv("DB_PORT", "5432")
 }
 
 # Folder to store uploaded files
-UPLOAD_FOLDER = os.path.join(parent_dir, 'uploads')  # Ensure uploads folder is in the correct location
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Function to connect to the database
 def connect_db():
-    return psycopg2.connect(**DB_CONFIG)
+    try:
+        return psycopg2.connect(**DB_CONFIG)
+    except Exception as e:
+        print(f"Error connecting to the database: {e}")
+        raise
 
-# User class for Flask-Login
-class User(UserMixin):
-    def __init__(self, id, username, email):
-        self.id = id
-        self.username = username
-        self.email = email
+# JWT Token Validation Decorator
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token:
+            return jsonify({"message": "Token is missing"}), 401
 
-# User loader function for Flask-Login
-@login_manager.user_loader
-def load_user(user_id):
-    conn = connect_db()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, username, email FROM users WHERE id = %s", (user_id,))
-    user_data = cursor.fetchone()
-    cursor.close()
-    conn.close()
+        try:
+            decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+            request.user = decoded_token  # Attach user info to the request
+        except jwt.ExpiredSignatureError:
+            return jsonify({"message": "Token has expired"}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"message": "Invalid token"}), 401
 
-    if user_data:
-        return User(id=user_data[0], username=user_data[1], email=user_data[2])
-    return None
+        return f(*args, **kwargs)
+    return decorated
 
-# Route for the homepage
-@app.route('/')
+# Route for the home page
+@app.route('/', methods=['GET'])
 def home():
     return render_template('index.html')
 
-# Route for the latest crime page
-@app.route('/widget')
+# Route for the widget page (latest crime)
+@app.route('/latestcrime', methods=['GET'])
 def latestcrime():
-    return render_template("widget.html")
-
-# Route for another page (example)
-@app.route('/form')
-def gotohome():
-    return render_template("form.html")
+    return render_template('widget.html')
 
 # Route for the table page
-@app.route('/table')
+@app.route('/table', methods=['GET'])
+def table():
+    return render_template('table.html')
+
+# Route for the "Report Crime" page (gotohome)
+@app.route('/gotohome', methods=['GET'])
+def gotohome():
+    return render_template('form.html')  # Assuming "Report Crime" redirects to the form page
+
+# Route for the "Criminal Details" page (gototable)
+@app.route('/gototable', methods=['GET'])
 def gototable():
-    return render_template("table.html")
+    return render_template('table.html')  # Assuming "Criminal Details" redirects to the table page
 
-# Route to login page when clicked on logout option
-@app.route('/logout')
-def logout():
-    logout_user()  # Logs out the current user
-    session.clear()  # Clear the user's session
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('signin'))  # Redirect to the sign-in page
-
-# Route for profile
-@app.route('/profile')
-@login_required
-def profile():
-    return render_template('profile.html', user=current_user)
-
-# Route for settings
-@app.route('/settings', methods=['GET', 'POST'])
-@login_required
-def settings():
-    if request.method == 'POST':
-        # Update user details
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        update_user_details(current_user.id, username, email, password)
-        flash('Settings updated successfully!', 'success')
-        return redirect(url_for('settings'))
-    return render_template('settings.html', user=current_user)
-
-# Route for fetching news
-@app.route('/fetch-rss', methods=['GET'])
-def fetch_rss():
-    # RSS feed URL
-    rss_url = "https://news.google.com/rss/search?q=crime+India&hl=en-IN&gl=IN&ceid=IN:en"
+@app.route('/api/verify-token/', methods=['POST'])
+def verify_token():
+    token = request.json.get('token')
     try:
-        # Fetch the RSS feed
-        response = requests.get(rss_url, headers={"Cache-Control": "no-cache"})
-        response.raise_for_status()  # Raise an error for bad responses
-        return response.content, response.status_code, {'Content-Type': 'application/xml'}
-    except requests.exceptions.RequestException as e:
-        return jsonify({"error": f"Failed to fetch RSS feed: {str(e)}"}), 500
+        decoded_token = auth.verify_id_token(token)
+        role = decoded_token.get('role', 'user')  # Retrieve role from custom claims
+        return jsonify({"message": "Token verified", "role": role}), 200
+    except Exception as e:
+        return jsonify({"message": f"Error verifying token: {str(e)}"}), 401
 
-# Route for sign-in
-@app.route('/signin', methods=['GET', 'POST'])
-def signin():
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
 
-        # Validate user credentials
-        conn = connect_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT id, username, email FROM users WHERE username = %s AND password = %s", (username, password))
-        user_data = cursor.fetchone()
-        cursor.close()
-        conn.close()
+def role_required(required_role):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # Ensure the user is authenticated
+            token = request.headers.get('Authorization')
+            if not token:
+                return jsonify({"message": "Token is missing"}), 401
 
-        if user_data:
-            user = User(id=user_data[0], username=user_data[1], email=user_data[2])
-            login_user(user)
-            flash('Logged in successfully!', 'success')
-            return redirect(url_for('profile'))
-        else:
-            flash('Invalid username or password', 'danger')
+            try:
+                # Decode the JWT token
+                decoded_token = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+                user_role = decoded_token.get('role', 'user')  # Default to 'user' if no role is found
 
-    return render_template('signin.html')
+                # Check if the user's role matches the required role
+                if user_role != required_role:
+                    return jsonify({"message": "Access denied: Insufficient permissions"}), 403
 
-# Route for sign-up
+                # Attach user info to the request
+                request.user = decoded_token
+            except jwt.ExpiredSignatureError:
+                return jsonify({"message": "Token has expired"}), 401
+            except jwt.InvalidTokenError:
+                return jsonify({"message": "Invalid token"}), 401
+
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+    
+@app.route('/admin-dashboard', methods=['GET'])
+@role_required('admin')  # Only allow users with the 'admin' role
+def admin_dashboard():
+    return render_template('admin_dashboard.html')
+
+@app.route('/user-dashboard', methods=['GET'])
+@role_required('user')  # Only allow users with the 'user' role
+def user_dashboard():
+    return render_template('user_dashboard.html')
+
+# Route for the sign-up page
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if request.method == 'POST':
-        # Handle sign-up form submission
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']  # Capture the role from the form
+    if request.method == 'GET':
+        return render_template('signup.html')
 
-        try:
-            conn = connect_db()
-            cursor = conn.cursor()
+    # Handle POST request for sign-up
+    username = request.form['username']
+    email = request.form['email']
+    password = request.form['password']
+    role = request.form['role']  # Role can be 'normal' or 'admin'
 
-            # Insert the new user into the database with the role
-            cursor.execute("""
-                INSERT INTO users (username, email, password, role)
-                VALUES (%s, %s, %s, %s)
-            """, (username, email, password, role))
-
-            conn.commit()
-            cursor.close()
-            conn.close()
-
-            flash('Account created successfully! Please sign in.', 'success')
-            return redirect(url_for('signin'))
-        except Exception as e:
-            flash(f'Error creating account: {str(e)}', 'danger')
-
-    return render_template('signup.html')
-
-# Function to update user details in the database
-def update_user_details(user_id, username, email, password):
     try:
-        conn = connect_db()
-        cursor = conn.cursor()
+        # Create a new user in Firebase Authentication
+        user = auth.create_user(
+            email=email,
+            password=password,
+            display_name=username
+        )
 
-        # Update user details in the database
-        cursor.execute("""
-            UPDATE users
-            SET username = %s, email = %s, password = %s
-            WHERE id = %s
-        """, (username, email, password, user_id))
+        # Assign a role to the user using custom claims
+        auth.set_custom_user_claims(user.uid, {"role": role})
 
-        conn.commit()
-        cursor.close()
-        conn.close()
+        flash(f"User created successfully with role '{role}'. Please sign in.", "success")
+        return redirect(url_for('signin'))
     except Exception as e:
-        print(f"Error updating user details: {e}")
-        raise
+        # Flash an error message and reload the signup page
+        flash(f"Error creating account: {str(e)}", "danger")
+        return redirect(url_for('signup'))
 
-# Route to handle crime report submission
-@app.route("/submit-report", methods=["POST"])
-def submit_report():
+# Route for the sign-in page
+@app.route('/signin', methods=['GET', 'POST'])
+def signin():
+    if request.method == 'GET':
+        return render_template('signin.html')
+
+    # Handle POST request for sign-in
+    email = request.form['email']
+    password = request.form['password']
+
     try:
-        conn = connect_db()
-        cursor = conn.cursor()
+        # Verify the user's email and password using Firebase Authentication
+        user = auth.get_user_by_email(email)
 
-        # Get form data
-        name = request.form.get("name")
-        place = request.form.get("place")
-        category = request.form.get("category")
-        description = request.form.get("description")
+        # Firebase does not directly verify passwords; this is handled on the client side.
 
-        # Handle file uploads
-        files = request.files.getlist("evidence")  # Ensure input name matches frontend
-        saved_files = []
+        # Retrieve custom claims (role) from the user's token
+        custom_claims = user.custom_claims
+        role = custom_claims.get('role', 'user') if custom_claims else 'user'
 
-        for file in files:
-            if file.filename:
-                file_path = os.path.join(app.config["UPLOAD_FOLDER"], file.filename)
-                file.save(file_path)
-                saved_files.append(file.filename)  # Store only the file name in DB
+        # Generate a JWT for the user
+        token = jwt.encode({
+            "uid": user.uid,
+            "email": user.email,
+            "role": role,
+            "exp": datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
+        }, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
-        # Convert list of file names to a comma-separated string
-        evidence = ",".join(saved_files)
-
-        # Insert data into database
-        cursor.execute("""
-            INSERT INTO crime_reports (name, place, category, description, evidence)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (name, place, category, description, evidence))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return jsonify({
-            "status": "success",
-            "message": "Crime report submitted successfully.",
-            "uploaded_files": saved_files
-        }), 200
-
+                # Store the token in the session or redirect to the index page
+        flash("Sign-in successful!", "success")
+        return redirect(url_for('home'))  # Redirect to the home page (index.html)
+    except firebase_admin.auth.UserNotFoundError:
+        flash("Invalid email or password", "danger")
+        return redirect(url_for('signin'))
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        flash(f"Error during sign-in: {str(e)}", "danger")
+        return redirect(url_for('signin'))
+    
+#Route to protect routes with authentication
+@app.route('/protected-route', methods=['GET'])
+@token_required
+def protected_route():
+    user = request.user  # Access user info from the decoded token
+    return jsonify({"message": f"Welcome, {user['email']}!"})
+
+# Route for the profile page (protected)
+@app.route('/profile', methods=['GET'])
+@token_required
+def profile():
+    user = request.user
+    return render_template('profile.html', user=user)
+
+# Route for the form page
+@app.route('/form', methods=['GET'])
+def form():
+    return render_template('form.html')
+
+# Route for the settings page
+@app.route('/settings', methods=['GET'])
+def settings():
+    return render_template('settings.html')  # Ensure settings.html exists in the templates folder
+
+# Route for logging out
+@app.route('/logout', methods=['GET'])
+def logout():
+    # Clear session or perform logout logic here
+    flash("You have been logged out successfully.", "success")
+    return redirect(url_for('signin'))  # Redirect to the sign-in page
+
+import feedparser
+
+@app.route('/fetch-rss', methods=['GET'])
+def fetch_rss():
+    # Google News RSS feed for crime news
+    rss_url = "https://news.google.com/rss/search?q=crime"
+    feed = feedparser.parse(rss_url)
+    articles = []
+
+    # Parse the RSS feed and extract relevant details
+    for entry in feed.entries[:10]:  # Limit to 10 articles
+        articles.append({
+            "title": entry.title,
+            "link": entry.link,
+            "published": entry.published if "published" in entry else "No Date",
+        })
+
+    return jsonify(articles)
 
 # Run the Flask app
 if __name__ == "__main__":

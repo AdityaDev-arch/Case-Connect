@@ -1,4 +1,4 @@
-// auth.js - Handles user authentication (signup, login, logout, refresh token)
+// auth.js - Handles user authentication (signup, login, logout)
 
 // ✅ Helper function to show messages
 function showMessage(message, isSuccess = true) {
@@ -7,48 +7,77 @@ function showMessage(message, isSuccess = true) {
   msgBox.style.color = isSuccess ? "green" : "red";
 }
 
+// 🔹 Firebase Configuration
+import { initializeApp } from "firebase/app";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
 // 🔹 Signup Function
-async function signup(username, password) {
-  if (!username || !password) {
-    showMessage("Please enter username and password", false);
+async function signup(email, password) {
+  if (!email || !password) {
+    showMessage("Please enter email and password", false);
     return;
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/signup/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-    });
+    // Create a new user using Firebase Authentication
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
 
-    const data = await response.json();
-    console.log("Signup Response:", data);
-
-    if (response.ok) {
-      showMessage("Signup successful! You can now log in.");
-      window.location.href = "login.html";
-    } else {
-      showMessage("Signup failed: " + (data.error || "Unknown error"), false);
-    }
+    console.log("Signup successful:", user);
+    showMessage("Signup successful! You can now log in.");
+    window.location.href = "signin.html"; // Redirect to login page
   } catch (error) {
     console.error("Error during signup:", error);
-    showMessage("Error signing up", false);
+    showMessage("Signup failed: " + error.message, false);
   }
 }
 
 // 🔹 Login Function
-async function login(username, password) {
-  if (!username || !password) {
-    showMessage("Please enter username and password", false);
+async function login(email, password) {
+  if (!email || !password) {
+    showMessage("Please enter email and password", false);
     return;
   }
 
   try {
-    const response = await fetch("http://localhost:8000/api/token/", {
+    // Sign in the user using Firebase Authentication
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const user = userCredential.user;
+
+    // Get the user's ID token
+    const token = await user.getIdToken();
+
+    // Send the token to the backend for verification
+    const response = await fetch("http://localhost:8000/api/verify-token/", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password }),
-      credentials: "include", // ✅ Required for HTTP-only cookies
+      body: JSON.stringify({ token }),
     });
 
     const data = await response.json();
@@ -57,7 +86,7 @@ async function login(username, password) {
     if (response.ok) {
       showMessage("Login successful!");
       sessionStorage.setItem("isLoggedIn", "true"); // ✅ Store login state
-      window.location.href = "dashboard.html";
+      window.location.href = "index.html"; // Redirect to dashboard
     } else {
       showMessage(
         "Login failed: " + (data.error || "Invalid credentials"),
@@ -66,54 +95,56 @@ async function login(username, password) {
     }
   } catch (error) {
     console.error("Error during login:", error);
-    showMessage("Error logging in", false);
-  }
-}
-
-// 🔹 Refresh Token Function
-async function refreshToken() {
-  try {
-    const response = await fetch("http://localhost:8000/api/token/refresh/", {
-      method: "POST",
-      credentials: "include",
-    });
-
-    const data = await response.json();
-    console.log("Token Refresh Response:", data);
-
-    if (response.ok) {
-      showMessage("Access token refreshed!");
-    } else {
-      showMessage(
-        "Token refresh failed: " + (data.error || "Invalid refresh token"),
-        false
-      );
-    }
-  } catch (error) {
-    console.error("Error refreshing token:", error);
-    showMessage("Error refreshing token", false);
+    showMessage("Error logging in: " + error.message, false);
   }
 }
 
 // 🔹 Logout Function
 async function logout() {
   try {
-    const response = await fetch("http://localhost:8000/api/logout/", {
-      method: "POST",
-      credentials: "include",
-    });
+    // Sign out the user using Firebase Authentication
+    await signOut(auth);
 
-    console.log("Logout Response:", await response.json());
-
-    if (response.ok) {
-      showMessage("Logged out successfully!");
-      sessionStorage.removeItem("isLoggedIn"); // ✅ Clear session state
-      window.location.href = "login.html";
-    } else {
-      showMessage("Logout failed!", false);
-    }
+    showMessage("Logged out successfully!");
+    sessionStorage.removeItem("isLoggedIn"); // ✅ Clear session state
+    window.location.href = "signin.html"; // Redirect to login page
   } catch (error) {
     console.error("Error during logout:", error);
-    showMessage("Error logging out", false);
+    showMessage("Error logging out: " + error.message, false);
+  }
+}
+
+// 🔹 Fetch Protected Route
+async function fetchProtectedRoute() {
+  // Fetch the JWT token from sessionStorage or localStorage
+  const token = sessionStorage.getItem("token"); // Or use localStorage.getItem('token')
+
+  // Check if the token exists
+  if (!token) {
+    showMessage("You are not logged in. Please sign in first.", false);
+    window.location.href = "/signin"; // Redirect to the sign-in page
+    return;
+  }
+
+  try {
+    // Make a request to the protected route
+    const response = await fetch("/protected-route", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the token
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      console.log(data.message); // Log the welcome message
+      showMessage(data.message, true); // Display the message in the UI
+    } else {
+      showMessage("Access denied: " + (data.message || "Unknown error"), false);
+    }
+  } catch (error) {
+    console.error("Error accessing protected route:", error);
+    showMessage("Error accessing protected route. Please try again.", false);
   }
 }

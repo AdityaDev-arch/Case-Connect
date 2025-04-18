@@ -2,6 +2,8 @@
 <html lang="en">
   <head>
     <title>My Profile</title>
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <!-- Include auth.js -->
   </head>
   <body>
     <div class="container">
@@ -18,6 +20,19 @@
         <p>Role: {{ user.role }}</p>
         <p>Account Created: {{ user.created_at }}</p>
       </div>
+
+      <!-- Button to Access Protected Route -->
+      <button id="fetch-protected">Access Protected Route</button>
+
+      <!-- Div to Display Messages -->
+      <div id="auth-message"></div>
     </div>
+
+    <!-- Attach Event Listener -->
+    <script>
+      document
+        .getElementById("fetch-protected")
+        .addEventListener("click", fetchProtectedRoute);
+    </script>
   </body>
 </html>

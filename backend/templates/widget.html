@@ -37,6 +37,10 @@
       rel="stylesheet"
     />
     <link
+      href="{{ url_for('static', filename='lib/owlcarousel/assets/owl.theme.default.min.css') }}"
+      rel="stylesheet"
+    />
+    <link
       href="{{ url_for('static', filename='lib/tempusdominus/css/tempusdominus-bootstrap-4.min.css') }}"
       rel="stylesheet"
     />
@@ -214,9 +218,15 @@
               <div
                 class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0"
               >
-                <a href="#" class="dropdown-item">My Profile</a>
-                <a href="#" class="dropdown-item">Settings</a>
-                <a href="#" class="dropdown-item">Log Out</a>
+                <a href="{{ url_for('profile') }}" class="dropdown-item"
+                  >My Profile</a
+                >
+                <a href="{{ url_for('settings') }}" class="dropdown-item"
+                  >Settings</a
+                >
+                <a href="{{ url_for('logout') }}" class="dropdown-item"
+                  >Log Out</a
+                >
               </div>
             </div>
           </div>
@@ -300,67 +310,31 @@
 
         // Fetch the RSS feed
         fetch(rssUrl)
-          .then((response) => response.text()) // Parse as text since it's XML
-          .then((data) => {
-            console.log("Raw RSS Feed Data:", data); // Debug: Log raw RSS feed data
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data, "text/xml");
-            console.log("Parsed XML:", xml); // Debug: Log the parsed XML
-            const items = xml.getElementsByTagName("item");
-            console.log("Parsed Items:", items); // Debug: Log the parsed items
+          .then((response) => response.json()) // Parse as JSON
+          .then((articles) => {
+            console.log("Fetched Articles:", articles); // Debug: Log the articles
 
             // Clear existing news items
             newsContainer.innerHTML = "";
 
-            // Filter duplicate news items based on title
-            const uniqueTitles = new Set();
-            const uniqueItems = Array.from(items).filter((item) => {
-              const title =
-                item.querySelector("title")?.textContent || "No Title";
-              if (uniqueTitles.has(title)) {
-                return false; // Skip duplicates
-              }
-              uniqueTitles.add(title);
-              return true;
-            });
-
-            // Process each unique news item
-            uniqueItems.forEach((item, index) => {
-              console.log(`Item ${index}:`, item); // Log each item
-              const title =
-                item.querySelector("title")?.textContent || "No Title";
-              const link = item.querySelector("link")?.textContent || "#";
-              const pubDate =
-                item.querySelector("pubDate")?.textContent || "No Date";
-
-              console.log(
-                `Title: ${title}, Link: ${link}, PubDate: ${pubDate}`
-              ); // Debug each field
-
-              if (title && link && pubDate) {
+            if (articles.length > 0) {
+              // Process each article
+              articles.forEach((article) => {
                 const newsItem = document.createElement("div");
-                newsItem.classList.add("testimonial-item", "text-center");
+                newsItem.classList.add("item"); // Add the 'item' class required by Owl Carousel
                 newsItem.innerHTML = `
-                  <h5 class="mb-1">${title}</h5>
-                  <p>${pubDate}</p>
-                  <a href="${link}" target="_blank">Read more</a>
-                `;
+    <h5 class="mb-1">${article.title}</h5>
+    <p>${article.published}</p>
+    <a href="${article.link}" target="_blank">Read more</a>
+  `;
                 newsContainer.appendChild(newsItem);
-                console.log("Appended news item:", newsItem); // Debug appended item
-              }
-            });
+              });
 
-            // Check if the carousel has items after processing all news items
-            if (newsContainer.children.length === 0) {
-              console.log(
-                "No news articles to display. Skipping carousel initialization."
-              );
+              // Initialize carousel after adding news items
+              initializeCarousel();
+            } else {
               newsContainer.innerHTML = "<p>No news articles found.</p>";
-              return;
             }
-
-            // Initialize the carousel after all items are appended
-            initializeCarousel();
           })
           .catch((error) => {
             console.error("Error fetching RSS feed:", error);
@@ -371,20 +345,20 @@
         function initializeCarousel() {
           const owlCarousel = $(".owl-carousel");
           owlCarousel.owlCarousel({
-            loop: true,
-            margin: 10,
-            nav: true,
+            loop: true, // Enable infinite looping
+            margin: 10, // Space between items
+            nav: false, // Disable navigation arrows
             dots: false, // Disable dots
             responsive: {
-              0: { items: 1 },
-              600: { items: 1 },
-              1000: { items: 1 },
+              0: { items: 1 }, // 1 item for small screens
+              600: { items: 2 }, // 2 items for medium screens
+              1000: { items: 3 }, // 3 items for large screens
             },
-            autoplay: true,
-            autoplayTimeout: 2000, // Slide every 2 seconds
-            autoplayHoverPause: true,
-            touchDrag: true,
-            mouseDrag: true,
+            autoplay: true, // Enable autoplay
+            autoplayTimeout: 3000, // Slide every 3 seconds
+            autoplayHoverPause: true, // Pause on hover
+            touchDrag: true, // Enable touch dragging
+            mouseDrag: true, // Enable mouse dragging
           });
 
           console.log("Carousel initialized successfully.");

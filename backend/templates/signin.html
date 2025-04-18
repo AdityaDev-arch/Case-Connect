@@ -6,8 +6,14 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 
     <!-- Customized Bootstrap Stylesheet -->
-    <link rel="stylesheet" href="../static/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="../static/css/style.css" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
   </head>
 
   <body>
@@ -17,6 +23,16 @@
       <div class="col-md-5">
         <div class="bg-secondary rounded p-4">
           <h3 class="text-center text-primary mb-4">Sign In</h3>
+          <!-- Error Message Placeholder -->
+          {% with messages = get_flashed_messages(with_categories=true) %} {% if
+          messages %}
+          <div class="alert alert-danger">
+            {% for category, message in messages %}
+            <p>{{ message }}</p>
+            {% endfor %}
+          </div>
+          {% endif %} {% endwith %}
+
           <form id="signin-form" action="/signin" method="POST">
             <div class="form-floating mb-3">
               <input
@@ -62,6 +78,6 @@
     </div>
 
     <!-- JavaScript Libraries -->
-    <script src="../static/js/signin.js"></script>
+    <script src="{{ url_for('static', filename='js/signin.js') }}"></script>
   </body>
 </html>
