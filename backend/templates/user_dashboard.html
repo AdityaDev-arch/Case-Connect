@@ -6,12 +6,15 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <!-- Include auth.js -->
   </head>
-  <body>
+  <body onload="checkAuthentication()">
+    <!-- Call checkAuthentication() on page load -->
     <div class="container">
-      <h1>Welcome, {{ user.username }}!</h1>
-      <p>Email: {{ user.email }}</p>
-      <p>Role: {{ user.role }}</p>
+      <h1>Welcome, {{ user['username'] }}!</h1>
+      <p>Email: {{ user['email'] }}</p>
+      <p>Role: {{ user['role'] }}</p>
 
       <h2>What would you like to do?</h2>
       <ul>

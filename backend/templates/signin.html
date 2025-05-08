@@ -14,6 +14,8 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <!-- Include auth.js -->
   </head>
 
   <body>
@@ -59,11 +61,33 @@
             </div>
 
             <div class="form-floating mb-4">
-              <select class="form-select" id="role" name="role" required>
+              <select
+                class="form-select"
+                id="role"
+                name="role"
+                required
+                onchange="toggleAdminSecretField()"
+              >
                 <option value="user" selected>User</option>
                 <option value="admin">Admin</option>
               </select>
               <label for="role">Sign in as</label>
+            </div>
+
+            <!-- Admin Secret Key Field -->
+            <div
+              class="form-floating mb-3"
+              id="admin-secret-field"
+              style="display: none"
+            >
+              <input
+                type="password"
+                class="form-control"
+                name="admin_secret"
+                id="admin_secret"
+                placeholder="Admin Secret Key"
+              />
+              <label for="admin_secret">Admin Secret Key</label>
             </div>
 
             <button type="submit" class="btn btn-primary w-100 py-3">
@@ -73,11 +97,27 @@
               Don’t have an account? <a href="/signup">Sign Up</a>
             </p>
           </form>
+
+          <script>
+            function toggleAdminSecretField() {
+              const role = document.getElementById("role").value;
+              const adminSecretField =
+                document.getElementById("admin-secret-field");
+              if (role === "admin") {
+                adminSecretField.style.display = "block";
+                document
+                  .getElementById("admin_secret")
+                  .setAttribute("required", "true");
+              } else {
+                adminSecretField.style.display = "none";
+                document
+                  .getElementById("admin_secret")
+                  .removeAttribute("required");
+              }
+            }
+          </script>
         </div>
       </div>
     </div>
-
-    <!-- JavaScript Libraries -->
-    <script src="{{ url_for('static', filename='js/signin.js') }}"></script>
   </body>
 </html>

@@ -15,16 +15,16 @@ load_dotenv()
 
 # Initialize Flask app with custom templates and static folder paths
 app = Flask(
-    __name__,
-    template_folder=os.path.join(os.path.dirname(__file__), '../templates'),
-    static_folder=os.path.join(os.path.dirname(__file__), '../static')
+    _name_,
+    template_folder=os.path.join(os.path.dirname(_file_), '../templates'),
+    static_folder=os.path.join(os.path.dirname(_file_), '../static')
 )
 app.secret_key = os.getenv("SECRET_KEY", "your_secret_key")  # Use environment variable for security
 CORS(app)
 bcrypt = Bcrypt(app)
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate(r"C:\Users\adity\Downloads\caseconnect-87388-firebase-adminsdk-fbsvc-aeff129314.json")
+cred = credentials.Certificate(r"C:\Users\gudek\OneDrive\Documents\Project_firebasse\caseconnect-87388-firebase-adminsdk-fbsvc-aeff129314.json")
 firebase_admin.initialize_app(cred)
 
 # JWT Configuration
@@ -36,12 +36,12 @@ DB_CONFIG = {
     "dbname": os.getenv("DB_NAME", "case_connect"),
     "user": os.getenv("DB_USER", "postgres"),
     "password": os.getenv("DB_PASSWORD", "nihar@123"),
-    "host": os.getenv("DB_HOST", "152.58.30.93"),
+    "host": os.getenv("DB_HOST", "localhost"),
     "port": os.getenv("DB_PORT", "5432")
 }
 
 # Folder to store uploaded files
-UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'uploads')
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(_file_)), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Function to connect to the database
@@ -264,8 +264,41 @@ def fetch_rss():
 
     return jsonify(articles)
 
+
+@app.route('/submit-report', methods=['POST'])
+def submit_report():
+    try:
+        name = request.form.get('name')
+        place = request.form.get('place')
+        category = request.form.get('category')
+        description = request.form.get('description')
+
+        # File handling (optional)
+        if 'evidence' in request.files:
+            evidence_files = request.files.getlist('evidence')
+            evidence_paths = [file.filename for file in evidence_files]
+        else:
+            evidence_paths = None
+
+        # Use correct DB connection function
+        conn = connect_db()
+        cur = conn.cursor()
+        cur.execute(
+            "INSERT INTO crime_reports (name, place, category, description, evidence) VALUES (%s, %s, %s, %s, %s)",
+            (name, place, category, description, str(evidence_paths))
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+
+        return jsonify({"status": "success", "message": "Report submitted successfully!"})
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+
+
 # Run the Flask app
-if __name__ == "__main__":
+if __name__ == "_main_":
     # Ensure the uploads folder exists
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])

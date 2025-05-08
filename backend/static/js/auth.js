@@ -17,12 +17,12 @@ import {
 } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyBGTHQb_4PTadKiHBsfh5PL9GyJ9MUprKU",
+  authDomain: "caseconnect-87388.firebaseapp.com",
+  projectId: "caseconnect-87388",
+  storageBucket: "caseconnect-87388.firebasestorage.app",
+  messagingSenderId: "765279832041",
+  appId: "1:765279832041:web:fe6f5bb802cb7a8f4fad78",
 };
 
 // Initialize Firebase
@@ -73,6 +73,9 @@ async function login(email, password) {
     // Get the user's ID token
     const token = await user.getIdToken();
 
+    // Debug: Log the token
+    console.log("Generated ID Token:", token);
+
     // Send the token to the backend for verification
     const response = await fetch("http://localhost:8000/api/verify-token/", {
       method: "POST",
@@ -81,22 +84,69 @@ async function login(email, password) {
     });
 
     const data = await response.json();
-    console.log("Login Response:", data);
+    console.log("Login Response from Backend:", data);
 
     if (response.ok) {
-      showMessage("Login successful!");
-      sessionStorage.setItem("isLoggedIn", "true"); // ✅ Store login state
-      window.location.href = "index.html"; // Redirect to dashboard
+      // Store the token and role in sessionStorage
+      sessionStorage.setItem("token", token); // ✅ Store the token
+      sessionStorage.setItem("role", data.role); // ✅ Store the user's role
+
+      // Debug: Verify stored token and role
+      console.log("Stored Token:", sessionStorage.getItem("token"));
+      console.log("Stored Role:", sessionStorage.getItem("role"));
+
+      // Redirect based on role
+      if (data.role === "admin") {
+        window.location.href = "/admin-dashboard";
+      } else if (data.role === "user") {
+        window.location.href = "/user-dashboard";
+      } else {
+        showMessage("Unknown role. Please contact support.", false);
+      }
     } else {
+      // Handle backend errors
       showMessage(
-        "Login failed: " + (data.error || "Invalid credentials"),
+        "Login failed: " + (data.message || "Invalid credentials"),
         false
       );
     }
   } catch (error) {
+    // Handle client-side errors
     console.error("Error during login:", error);
     showMessage("Error logging in: " + error.message, false);
   }
+}
+
+// 🔹 Check Authentication (Protect Frontend Pages)
+function checkAuthentication() {
+  const token = sessionStorage.getItem("token");
+  if (!token) {
+    alert("You are not logged in. Redirecting to login page.");
+    window.location.href = "/signin"; // Redirect to the sign-in page
+    return;
+  }
+
+  // Verify the token with the backend
+  fetch("/protected-route", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`, // Include the token in the Authorization header
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Unauthorized access");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Authenticated:", data.message);
+    })
+    .catch((error) => {
+      console.error("Authentication error:", error);
+      alert("Session expired. Please log in again.");
+      window.location.href = "/signin"; // Redirect to the sign-in page
+    });
 }
 
 // 🔹 Logout Function
@@ -106,7 +156,8 @@ async function logout() {
     await signOut(auth);
 
     showMessage("Logged out successfully!");
-    sessionStorage.removeItem("isLoggedIn"); // ✅ Clear session state
+    sessionStorage.removeItem("token"); // ✅ Clear the token
+    sessionStorage.removeItem("role"); // ✅ Clear the role
     window.location.href = "signin.html"; // Redirect to login page
   } catch (error) {
     console.error("Error during logout:", error);
@@ -116,22 +167,19 @@ async function logout() {
 
 // 🔹 Fetch Protected Route
 async function fetchProtectedRoute() {
-  // Fetch the JWT token from sessionStorage or localStorage
-  const token = sessionStorage.getItem("token"); // Or use localStorage.getItem('token')
+  const token = sessionStorage.getItem("token"); // Retrieve the token
 
-  // Check if the token exists
   if (!token) {
-    showMessage("You are not logged in. Please sign in first.", false);
-    window.location.href = "/signin"; // Redirect to the sign-in page
+    alert("You are not logged in. Please log in first.");
+    window.location.href = "/signin";
     return;
   }
 
   try {
-    // Make a request to the protected route
     const response = await fetch("/protected-route", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${token}`, // Include the token
+        Authorization: `Bearer ${token}`, // Include the token in the Authorization header
       },
     });
 
@@ -139,12 +187,57 @@ async function fetchProtectedRoute() {
 
     if (response.ok) {
       console.log(data.message); // Log the welcome message
-      showMessage(data.message, true); // Display the message in the UI
     } else {
-      showMessage("Access denied: " + (data.message || "Unknown error"), false);
+      alert(data.message || "Access denied");
     }
   } catch (error) {
     console.error("Error accessing protected route:", error);
-    showMessage("Error accessing protected route. Please try again.", false);
+    alert("An error occurred. Please try again.");
   }
+}
+
+// 🔹 Check Authentication (Protect Frontend Pages)
+// 🔹 Check Authentication (Protect Frontend Pages)
+function checkAuthentication() {
+  const token = sessionStorage.getItem("token");
+  if (!token) {
+    alert("You are not logged in. Redirecting to login page.");
+    window.location.href = "/signin"; // Redirect to the sign-in page
+    return;
+  }
+
+  // Include the token in the Authorization header for all protected routes
+  fetch("/protected-route", {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`, // Include the token
+    },
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Unauthorized access");
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Authenticated:", data.message);
+    })
+    .catch((error) => {
+      console.error("Authentication error:", error);
+      alert("Session expired. Please log in again.");
+      window.location.href = "/signin"; // Redirect to the sign-in page
+    });
+}
+
+// 🔹 Decode Token (Optional)
+function decodeToken(token) {
+  const payload = JSON.parse(atob(token.split(".")[1])); // Decode the JWT payload
+  return payload;
+}
+
+// Example usage of decodeToken
+const token = sessionStorage.getItem("token");
+if (token) {
+  const userInfo = decodeToken(token);
+  console.log("User Info:", userInfo);
 }

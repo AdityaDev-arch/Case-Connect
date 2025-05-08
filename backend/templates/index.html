@@ -52,6 +52,73 @@
       href="{{ url_for('static', filename='css/style.css') }}"
       rel="stylesheet"
     />
+
+    <style>
+      /* Hero Section */
+      .hero-section {
+        background: url("path/to/your-image.jpg") no-repeat center center;
+        background-size: cover;
+        height: 60vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+      }
+      .hero-section h1 {
+        font-size: 3rem;
+        font-weight: 600;
+      }
+      .hero-section p {
+        font-size: 1.2rem;
+        margin-bottom: 20px;
+      }
+      .btn-primary {
+        padding: 10px 30px;
+        font-size: 1.2rem;
+      }
+
+      /* Card Styles */
+      .card {
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+      }
+      .card:hover {
+        transform: scale(1.05);
+      }
+      .card-body {
+        padding: 30px;
+      }
+      .card-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+      }
+      .card-text {
+        font-size: 1rem;
+        margin-bottom: 20px;
+      }
+
+      /* Stats Section */
+      .stats-section {
+        background-color: #f8f9fa;
+        padding: 50px 0;
+      }
+      .counter {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #007bff;
+      }
+
+      /* Parallax Effect */
+      .parallax {
+        background-image: url("path/to/your-image.jpg");
+        height: 400px;
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+        position: relative;
+      }
+    </style>
   </head>
 
   <body>
@@ -128,58 +195,83 @@
 
       <!-- Content Start -->
       <div class="content">
-        <!-- Navbar Start -->
-        <nav
-          class="navbar navbar-expand bg-secondary navbar-dark sticky-top px-4 py-0"
-        >
-          <a
-            href="{{ url_for('home') }}"
-            class="navbar-brand d-flex d-lg-none me-4"
-          >
-            <h2 class="text-primary mb-0"><i class="fa fa-user-edit"></i></h2>
-          </a>
-          <a href="#" class="sidebar-toggler flex-shrink-0">
-            <i class="fa fa-bars"></i>
-          </a>
-          <form class="d-none d-md-flex ms-4">
-            <input
-              class="form-control bg-dark border-0"
-              type="search"
-              placeholder="Search"
-            />
-          </form>
-          <div class="navbar-nav align-items-center ms-auto">
-            <div class="nav-item dropdown">
-              <a
-                href="#"
-                class="nav-link dropdown-toggle"
-                data-bs-toggle="dropdown"
-              >
-                <img
-                  class="rounded-circle me-lg-2"
-                  src="{{ url_for('static', filename='img/default-user.png') }}"
-                  alt=""
-                  style="width: 40px; height: 40px"
-                />
-                <span class="d-none d-lg-inline-flex">Username</span>
-              </a>
-              <div
-                class="dropdown-menu dropdown-menu-end bg-secondary border-0 rounded-0 rounded-bottom m-0"
-              >
-                <a href="{{ url_for('profile') }}" class="dropdown-item"
-                  >My Profile</a
-                >
-                <a href="{{ url_for('settings') }}" class="dropdown-item"
-                  >Settings</a
-                >
-                <a href="{{ url_for('logout') }}" class="dropdown-item"
-                  >Log Out</a
-                >
+        <!-- Hero Section Start -->
+        <section class="hero-section text-center">
+          <div>
+            <h1>Welcome to Case Connect</h1>
+            <p>Your solution for managing criminal records</p>
+            <a href="{{ url_for('latestcrime') }}" class="btn btn-primary"
+              >Explore Latest News</a
+            >
+          </div>
+        </section>
+        <!-- Hero Section End -->
+
+        <!-- Stats Section Start -->
+        <section class="stats-section text-center">
+          <div class="container">
+            <div class="row">
+              <div class="col-md-4">
+                <h2 class="counter" data-target="120">0</h2>
+                <p>Criminal Records</p>
+              </div>
+              <div class="col-md-4">
+                <h2 class="counter" data-target="50">0</h2>
+                <p>Latest Cases</p>
+              </div>
+              <div class="col-md-4">
+                <h2 class="counter" data-target="150">0</h2>
+                <p>Reported Crimes</p>
               </div>
             </div>
           </div>
-        </nav>
-        <!-- Navbar End -->
+        </section>
+        <!-- Stats Section End -->
+
+        <!-- Cards Section Start -->
+        <div class="container my-5">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="card shadow-lg">
+                <div class="card-body text-center">
+                  <i class="fa fa-users fa-3x mb-3"></i>
+                  <h5 class="card-title">Criminal Database</h5>
+                  <p class="card-text">Explore detailed criminal records</p>
+                  <a href="{{ url_for('gototable') }}" class="btn btn-primary"
+                    >View Database</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card shadow-lg">
+                <div class="card-body text-center">
+                  <i class="fa fa-newspaper fa-3x mb-3"></i>
+                  <h5 class="card-title">Latest Crime News</h5>
+                  <p class="card-text">
+                    Stay updated with the latest crime news
+                  </p>
+                  <a href="{{ url_for('latestcrime') }}" class="btn btn-primary"
+                    >Read News</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card shadow-lg">
+                <div class="card-body text-center">
+                  <i class="fa fa-file-alt fa-3x mb-3"></i>
+                  <h5 class="card-title">Report a Crime</h5>
+                  <p class="card-text">Help us by reporting new crimes</p>
+                  <a href="{{ url_for('gotohome') }}" class="btn btn-primary"
+                    >Report Now</a
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Cards Section End -->
 
         <!-- Footer Start -->
         <div class="container-fluid pt-4 px-4">
@@ -196,9 +288,9 @@
       <!-- Content End -->
 
       <!-- Back to Top -->
-      <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"
-        ><i class="bi bi-arrow-up"></i
-      ></a>
+      <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top">
+        <i class="bi bi-arrow-up"></i>
+      </a>
     </div>
 
     <!-- JavaScript Libraries -->
@@ -214,5 +306,24 @@
 
     <!-- Template Javascript -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- Stats Counter Animation -->
+    <script>
+      document.querySelectorAll(".counter").forEach((counter) => {
+        counter.innerText = "0";
+        const updateCounter = () => {
+          const target = +counter.getAttribute("data-target");
+          const current = +counter.innerText;
+          const increment = target / 100;
+          if (current < target) {
+            counter.innerText = Math.ceil(current + increment);
+            setTimeout(updateCounter, 20);
+          } else {
+            counter.innerText = target;
+          }
+        };
+        updateCounter();
+      });
+    </script>
   </body>
 </html>
