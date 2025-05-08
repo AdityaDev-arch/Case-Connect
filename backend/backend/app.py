@@ -15,9 +15,9 @@ load_dotenv()
 
 # Initialize Flask app with custom templates and static folder paths
 app = Flask(
-    _name_,
-    template_folder=os.path.join(os.path.dirname(_file_), '../templates'),
-    static_folder=os.path.join(os.path.dirname(_file_), '../static')
+    __name__,
+    template_folder=os.path.join(os.path.dirname(__file__), '../templates'),
+    static_folder=os.path.join(os.path.dirname(__file__), '../static')
 )
 app.secret_key = os.getenv("SECRET_KEY", "your_secret_key")  # Use environment variable for security
 CORS(app)
@@ -41,7 +41,7 @@ DB_CONFIG = {
 }
 
 # Folder to store uploaded files
-UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(_file_)), 'uploads')
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Function to connect to the database
@@ -298,7 +298,7 @@ def submit_report():
 
 
 # Run the Flask app
-if __name__ == "_main_":
+if __name__ == "__main__":  # Fixed the issue here
     # Ensure the uploads folder exists
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
