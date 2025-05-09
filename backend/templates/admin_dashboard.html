@@ -1,30 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <title>Admin Dashboard</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
-    <!-- Include auth.js -->
   </head>
-  <body onload="checkAuthentication()">
-    <!-- Call checkAuthentication() on page load -->
-    <div class="container">
-      <h1>Welcome, Admin {{ user['username'] }}!</h1>
-      <p>Email: {{ user['email'] }}</p>
-      <p>Role: {{ user['role'] }}</p>
-
-      <h2>Admin Tools</h2>
-      <ul>
-        <li><a href="/manage-users">Manage Users</a></li>
-        <li><a href="/view-reports">View Submitted Reports</a></li>
-        <li><a href="/analytics">View Analytics</a></li>
-        <li><a href="/latestcrime">View Latest Crime Data</a></li>
-      </ul>
-
-      <a href="/logout" class="btn btn-danger">Logout</a>
-    </div>
+  <body>
+    <h1>Welcome to Admin Dashboard</h1>
+    <a href="{{ url_for('manage_criminals') }}">Manage Criminals</a>
   </body>
 </html>

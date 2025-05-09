@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Manage Criminals</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/admin.css') }}"
+    />
+  </head>
+  <body>
+    <h1>Suspect Reports</h1>
+    <table>
+      <tr>
+        <th>Name</th>
+        <th>Place</th>
+        <th>Description</th>
+        <th>Category</th>
+        <th>Action</th>
+      </tr>
+      {% for suspect in suspects %}
+      <tr>
+        <td>{{ suspect[0] }}</td>
+        <td>{{ suspect[1] }}</td>
+        <td>{{ suspect[2] }}</td>
+        <td>{{ suspect[3] }}</td>
+        <td>
+          <form action="{{ url_for('add_criminal') }}" method="get">
+            <input type="hidden" name="name" value="{{ suspect[0] }}" />
+            <input type="hidden" name="category" value="{{ suspect[3] }}" />
+            <button type="submit">Confirm as Criminal</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </body>
+</html>

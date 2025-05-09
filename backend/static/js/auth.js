@@ -15,6 +15,7 @@ import {
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBGTHQb_4PTadKiHBsfh5PL9GyJ9MUprKU",
@@ -28,11 +29,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
 // 🔹 Signup Function
-async function signup(email, password) {
-  if (!email || !password) {
-    showMessage("Please enter email and password", false);
+async function signup(email, password, fullName) {
+  if (!email || !password || !fullName) {
+    showMessage("Please enter email, password, and full name", false);
     return;
   }
 
@@ -46,6 +48,17 @@ async function signup(email, password) {
     const user = userCredential.user;
 
     console.log("Signup successful:", user);
+
+    // Add user data to Firestore (creating the users collection)
+    await setDoc(doc(db, "users", user.uid), {
+      name: fullName,
+      email: user.email,
+      createdAt: new Date(),
+    });
+
+    console.log("User data saved to Firestore");
+
+    // Show success message and redirect to sign-in page
     showMessage("Signup successful! You can now log in.");
     window.location.href = "signin.html"; // Redirect to login page
   } catch (error) {
@@ -194,39 +207,6 @@ async function fetchProtectedRoute() {
     console.error("Error accessing protected route:", error);
     alert("An error occurred. Please try again.");
   }
-}
-
-// 🔹 Check Authentication (Protect Frontend Pages)
-// 🔹 Check Authentication (Protect Frontend Pages)
-function checkAuthentication() {
-  const token = sessionStorage.getItem("token");
-  if (!token) {
-    alert("You are not logged in. Redirecting to login page.");
-    window.location.href = "/signin"; // Redirect to the sign-in page
-    return;
-  }
-
-  // Include the token in the Authorization header for all protected routes
-  fetch("/protected-route", {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`, // Include the token
-    },
-  })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error("Unauthorized access");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      console.log("Authenticated:", data.message);
-    })
-    .catch((error) => {
-      console.error("Authentication error:", error);
-      alert("Session expired. Please log in again.");
-      window.location.href = "/signin"; // Redirect to the sign-in page
-    });
 }
 
 // 🔹 Decode Token (Optional)

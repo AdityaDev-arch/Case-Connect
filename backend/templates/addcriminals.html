@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Add Criminal</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/admin.css') }}"
+    />
+  </head>
+  <body>
+    <h1>Confirm Suspect as Criminal</h1>
+    <form method="post" enctype="multipart/form-data" class="form-box">
+      <label>Name:</label>
+      <input type="text" name="name" value="{{ name }}" required /><br />
+
+      <label>Age:</label>
+      <input type="number" name="age" required /><br />
+
+      <label>Criminal ID:</label>
+      <input type="text" name="criminal_id" required /><br />
+
+      <label>Crime:</label>
+      <input type="text" name="crime" value="{{ crime }}" required /><br />
+
+      <label>In Custody:</label>
+      <select name="in_custody">
+        <option value="true">Yes</option>
+        <option value="false">No</option></select
+      ><br />
+
+      <label>Photo:</label>
+      <input type="file" name="photo" accept="image/*" required /><br />
+
+      <button type="submit">Submit</button>
+    </form>
+  </body>
+</html>

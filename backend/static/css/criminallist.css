@@ -1,0 +1,75 @@
+@font-face {
+  font-family: myFont;
+  src: url("../fonts/OpenSans-Regular.ttf"); /* Optional if you have fonts */
+}
+
+body {
+  margin: 0;
+  background-color: #1c1c1c;
+  font-family: myFont, sans-serif;
+}
+
+#wrapper {
+  max-width: 900px;
+  min-width: 500px;
+  display: flex;
+  margin: auto;
+  color: white;
+}
+
+#left_pannel {
+  min-height: 500px;
+  background-color: #27344b;
+  flex: 1;
+  text-align: center;
+}
+
+#left_pannel img {
+  width: 50%;
+  border: solid thin white;
+  border-radius: 50%;
+  margin: 10px;
+}
+
+#right_pannel {
+  min-height: 500px;
+  flex: 4;
+  text-align: center;
+}
+
+#header {
+  background-color: #485b6c;
+  height: 70px;
+  font-size: 35px;
+  line-height: 70px;
+}
+
+#inner_left_pannel {
+  background-color: #383e48;
+  flex: 1;
+  min-height: 430px;
+  padding: 20px;
+  font-size: 18px;
+  overflow-y: auto; /* Enable vertical scrolling */
+  max-height: 430px; /* Add this line if you want a fixed height */
+}
+
+#inner_right_pannel {
+  background-color: #000708;
+  flex: 2;
+  min-height: 430px;
+  padding: 20px;
+  text-align: left;
+}
+
+.criminal-name {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #485b6c;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.criminal-name:hover {
+  background-color: #4a4e57;
+}
