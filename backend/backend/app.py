@@ -1,6 +1,8 @@
-from flask import Flask, request, jsonify, render_template, redirect, url_for, flash
+from django import db
+from flask import Flask, request, jsonify, render_template, redirect, session, url_for, flash
 import firebase_admin
 from firebase_admin import auth, credentials
+from firebase_admin import firestore
 import os
 import psycopg2
 import jwt
@@ -9,6 +11,11 @@ from datetime import datetime, timedelta
 from functools import wraps
 from flask_cors import CORS
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+
+ADMIN_SIGNUP_SECRET_KEY="4d652b45aa45cd0870f52c02ca0b913560e9c89bd416f59c7403ec631d019406",
+ADMIN_SIGNIN_SECRET_KEY="9e3e0edd71a0118c4209e27b2624ffcdd27e93688e64214bf5550e3631191fbc",
+FIREBASE_API_KEY = "AIzaSyBGTHQb_4PTadKiHBsfh5PL9GyJ9MUprKU"
 
 # Load environment variables from .env file
 load_dotenv()
@@ -24,8 +31,11 @@ CORS(app)
 bcrypt = Bcrypt(app)
 
 # Initialize Firebase Admin SDK
-cred = credentials.Certificate(r"C:\Users\gudek\OneDrive\Documents\Project_firebasse\caseconnect-87388-firebase-adminsdk-fbsvc-aeff129314.json")
+cred = credentials.Certificate(r"C:\Users\adity\Downloads\caseconnect-87388-firebase-adminsdk-fbsvc-aeff129314.json")
 firebase_admin.initialize_app(cred)
+
+# Get Firestore client
+db = firestore.client()
 
 # JWT Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "your_jwt_secret_key")  # Use environment variable for security
@@ -36,7 +46,7 @@ DB_CONFIG = {
     "dbname": os.getenv("DB_NAME", "case_connect"),
     "user": os.getenv("DB_USER", "postgres"),
     "password": os.getenv("DB_PASSWORD", "nihar@123"),
-    "host": os.getenv("DB_HOST", "localhost"),
+    "host": os.getenv("DB_HOST", "152.57.91.227"),
     "port": os.getenv("DB_PORT", "5432")
 }
 
@@ -95,6 +105,82 @@ def gotohome():
 @app.route('/gototable', methods=['GET'])
 def gototable():
     return render_template('table.html')  # Assuming "Criminal Details" redirects to the table page
+
+@app.route('/criminal-list')
+def criminal_list():
+    return render_template('criminal_list.html')
+
+@app.route('/api/criminals')
+def get_criminals():
+    conn = connect_db()
+    cur = conn.cursor()
+    cur.execute('SELECT id, name FROM criminals_display')
+    criminals = [{'id': row[0], 'name': row[1]} for row in cur.fetchall()]
+    cur.close()
+    conn.close()
+    return jsonify(criminals)
+
+@app.route('/api/criminals/<int:criminal_id>')
+def get_criminal_details(criminal_id):
+    conn = connect_db()
+    cur = conn.cursor()
+    cur.execute('SELECT name, age, criminal_id, crime, in_custody, photo_url FROM criminals_display WHERE id = %s', (criminal_id,))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    if row:
+        return jsonify({
+            'name': row[0],
+            'age': row[1],
+            'criminal_id': row[2],
+            'crime': row[3],
+            'in_custody': row[4],
+            'photo_url': row[5]
+        })
+    else:
+        return jsonify({'error': 'Criminal not found'}), 404
+
+@app.route('/manage_criminals')
+def manage_criminals():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, place, description, category FROM crime_reports")
+    suspects = cursor.fetchall()
+    conn.close()
+    return render_template('manage_criminals.html', suspects=suspects)
+
+@app.route('/add_criminal', methods=['GET', 'POST'])
+def add_criminal():
+    if request.method == 'POST':
+        name = request.form['name']
+        age = request.form['age']
+        criminal_id = request.form['criminal_id']
+        crime = request.form['crime']
+        in_custody = request.form['in_custody'].lower() == 'true'
+
+        # Handle uploaded photo
+        photo = request.files['photo']
+        photo_filename = secure_filename(photo.filename)
+        photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo_filename)
+        photo.save(photo_path)
+
+        photo_url = photo_path  # Store path for display
+
+        # Insert into criminals_display table
+        conn = connect_db()
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO criminals_display (name, age, criminal_id, crime, in_custody, photo_url)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (name, age, criminal_id, crime, in_custody, photo_url))
+        conn.commit()
+        conn.close()
+
+        return redirect(url_for('manage_criminals'))  # Redirect after success
+
+    name = request.args.get('name', '')
+    crime = request.args.get('category', '')
+    return render_template('add_criminal.html', name=name, crime=crime)
 
 @app.route('/api/verify-token/', methods=['POST'])
 def verify_token():
@@ -179,40 +265,51 @@ def signup():
 # Route for the sign-in page
 @app.route('/signin', methods=['GET', 'POST'])
 def signin():
-    if request.method == 'GET':
-        return render_template('signin.html')
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        input_admin_secret_key = request.form.get('admin_secret_key')
 
-    # Handle POST request for sign-in
-    email = request.form['email']
-    password = request.form['password']
+        try:
+            user = auth.get_user_by_email(email)
+            uid = user.uid
+            user_doc = db.collection('users').document(uid).get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                role = user_data.get('role', 'user')  # Default to 'user'
 
-    try:
-        # Verify the user's email and password using Firebase Authentication
-        user = auth.get_user_by_email(email)
+                # Admin trying to login must provide correct admin_secret_key
+                if role == 'admin':
+                    if input_admin_secret_key != ADMIN_SIGNIN_SECRET_KEY:
+                        return 'Invalid admin secret key for sign in', 403
 
-        # Firebase does not directly verify passwords; this is handled on the client side.
+                # Verify password using Firebase REST (not Admin SDK)
+                payload = {
+                    "email": email,
+                    "password": password,
+                    "returnSecureToken": True
+                }
+                import requests
+                url = f"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={FIREBASE_API_KEY}"
+                r = requests.post(url, json=payload)
+                if r.status_code != 200:
+                    return 'Invalid credentials', 403
 
-        # Retrieve custom claims (role) from the user's token
-        custom_claims = user.custom_claims
-        role = custom_claims.get('role', 'user') if custom_claims else 'user'
+                # Login successful
+                session['user_id'] = uid
+                session['role'] = role
 
-        # Generate a JWT for the user
-        token = jwt.encode({
-            "uid": user.uid,
-            "email": user.email,
-            "role": role,
-            "exp": datetime.utcnow() + timedelta(hours=1)  # Token expires in 1 hour
-        }, JWT_SECRET, algorithm=JWT_ALGORITHM)
+                if role == 'admin':
+                    return redirect('/admin_dashboard')
+                else:
+                    return redirect('/home')
 
-                # Store the token in the session or redirect to the index page
-        flash("Sign-in successful!", "success")
-        return redirect(url_for('home'))  # Redirect to the home page (index.html)
-    except firebase_admin.auth.UserNotFoundError:
-        flash("Invalid email or password", "danger")
-        return redirect(url_for('signin'))
-    except Exception as e:
-        flash(f"Error during sign-in: {str(e)}", "danger")
-        return redirect(url_for('signin'))
+            return 'User data not found', 404
+        except Exception as e:
+            return f'Error: {str(e)}'
+
+    return render_template('signin.html')
+
     
 #Route to protect routes with authentication
 @app.route('/protected-route', methods=['GET'])
