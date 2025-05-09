@@ -87,6 +87,7 @@
               </button>
             </div>
 
+            <!-- Role Selection -->
             <div class="form-floating mb-4">
               <select
                 class="form-select"
@@ -101,7 +102,7 @@
               <label for="role">Sign up as</label>
             </div>
 
-            <!-- Admin Secret Key Field -->
+            <!-- Admin Secret Key Field (Initially Hidden) -->
             <div
               class="form-floating mb-3"
               id="admin-secret-field"
@@ -116,6 +117,16 @@
               />
               <label for="admin_secret">Admin Secret Key</label>
             </div>
+
+            <!-- Toggle Script -->
+            <script>
+              function toggleAdminSecretField() {
+                const role = document.getElementById("role").value;
+                const adminField =
+                  document.getElementById("admin-secret-field");
+                adminField.style.display = role === "admin" ? "block" : "none";
+              }
+            </script>
 
             <button
               type="submit"
@@ -177,6 +188,69 @@
           document.getElementById("admin_secret").removeAttribute("required");
         }
       }
+    </script>
+    <!-- Add this before closing </body> -->
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/auth.js') }}"
+    ></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js"></script>
+
+    <script>
+      // Your Firebase config (replace with actual config)
+      const firebaseConfig = {
+        apiKey: "AIzaSyBGTHQb_4PTadKiHBsfh5PL9GyJ9MUprKU",
+        authDomain: "caseconnect-87388.firebaseapp.com",
+        projectId: "caseconnect-87388",
+        storageBucket: "caseconnect-87388.firebasestorage.app",
+        messagingSenderId: "765279832041",
+        appId: "1:765279832041:web:fe6f5bb802cb7a8f4fad78",
+      };
+
+      // Initialize Firebase
+      const app = firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const db = firebase.firestore();
+
+      // Intercept form submission
+      document
+        .getElementById("signup-form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          // Show loading
+          document.getElementById("signup-button").style.display = "none";
+          document.getElementById("loading-spinner").style.display = "block";
+
+          const fullName = document.getElementById("username").value;
+          const email = document.getElementById("email").value;
+          const password = document.getElementById("password").value;
+
+          try {
+            const userCredential = await auth.createUserWithEmailAndPassword(
+              email,
+              password
+            );
+            const user = userCredential.user;
+
+            // Create Firestore document
+            await db.collection("users").doc(user.uid).set({
+              name: fullName,
+              email: user.email,
+              createdAt: new Date(),
+            });
+
+            alert("Signup successful! User data saved.");
+            window.location.href = "/signin";
+          } catch (error) {
+            console.error("Signup error:", error);
+            alert("Error: " + error.message);
+            document.getElementById("signup-button").style.display = "block";
+            document.getElementById("loading-spinner").style.display = "none";
+          }
+        });
     </script>
   </body>
 </html>

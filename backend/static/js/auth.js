@@ -8,20 +8,24 @@ function showMessage(message, isSuccess = true) {
 }
 
 // 🔹 Firebase Configuration
+// auth.js - Modular Firebase Authentication
+
 import { initializeApp } from "firebase/app";
+import { getDoc, doc } from "firebase/firestore";
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
 } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBGTHQb_4PTadKiHBsfh5PL9GyJ9MUprKU",
   authDomain: "caseconnect-87388.firebaseapp.com",
   projectId: "caseconnect-87388",
-  storageBucket: "caseconnect-87388.firebasestorage.app",
+  storageBucket: "caseconnect-87388.appspot.com", // FIXED TYPING ISSUE
   messagingSenderId: "765279832041",
   appId: "1:765279832041:web:fe6f5bb802cb7a8f4fad78",
 };
@@ -31,40 +35,55 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 🔹 Signup Function
-async function signup(email, password, fullName) {
-  if (!email || !password || !fullName) {
-    showMessage("Please enter email, password, and full name", false);
-    return;
-  }
+// ✅ Helper to show messages
+function showMessage(message, isSuccess = true) {
+  alert(message); // Replace with UI element if needed
+}
 
-  try {
-    // Create a new user using Firebase Authentication
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const user = userCredential.user;
+// ✅ Signup handler (for signup.html)
+const signupForm = document.getElementById("signup-form");
+if (signupForm) {
+  signupForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    console.log("Signup successful:", user);
+    const fullName = document.getElementById("username").value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value; // admin or user
 
-    // Add user data to Firestore (creating the users collection)
-    await setDoc(doc(db, "users", user.uid), {
-      name: fullName,
-      email: user.email,
-      createdAt: new Date(),
-    });
+    // 🔐 If admin, validate secret
+    if (role === "admin") {
+      const adminSecret = document.getElementById("admin_secret").value;
+      const expectedSecret = "your-secret-key"; // Replace with secure value
 
-    console.log("User data saved to Firestore");
+      if (adminSecret !== expectedSecret) {
+        showMessage("Invalid Admin Secret", false);
+        return;
+      }
+    }
 
-    // Show success message and redirect to sign-in page
-    showMessage("Signup successful! You can now log in.");
-    window.location.href = "signin.html"; // Redirect to login page
-  } catch (error) {
-    console.error("Error during signup:", error);
-    showMessage("Signup failed: " + error.message, false);
-  }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        name: fullName,
+        email: user.email,
+        role: role,
+        createdAt: serverTimestamp(),
+      });
+
+      showMessage("Signup successful!");
+      window.location.href = "/signin";
+    } catch (error) {
+      console.error("Signup error:", error);
+      showMessage("Signup failed: " + error.message, false);
+    }
+  });
 }
 
 // 🔹 Login Function
@@ -127,6 +146,91 @@ async function login(email, password) {
     // Handle client-side errors
     console.error("Error during login:", error);
     showMessage("Error logging in: " + error.message, false);
+  }
+}
+
+// Signin logic (inside your signin.html or linked script)
+document
+  .getElementById("signin-form")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+
+    // Show loading spinner
+    document.getElementById("signin-button").style.display = "none";
+    document.getElementById("loading-spinner").style.display = "block";
+
+    try {
+      // Authenticate user
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+
+      console.log("User signed in:", user.uid);
+
+      // Retrieve user data from Firestore
+
+      const userDocRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(userDocRef);
+
+      if (docSnap.exists) {
+        console.log("User data found:", docSnap.data());
+
+        // Get ID token
+        const token = await user.getIdToken();
+        const role = docSnap.data().role || "user";
+
+        // Send token to backend
+        const response = await fetch(
+          "http://localhost:8000/api/verify-token/",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Store in sessionStorage
+          sessionStorage.setItem("token", token);
+          sessionStorage.setItem("role", role);
+
+          // Redirect
+          if (role === "admin") {
+            window.location.href = "/admin-dashboard";
+          } else {
+            window.location.href = "/user-dashboard";
+          }
+        } else {
+          alert(data.message || "Token verification failed");
+        }
+      } else {
+        alert("User data not found in Firestore.");
+        console.error("User doc does not exist");
+      }
+    } catch (error) {
+      console.error("Sign-in error:", error);
+      alert("Sign-in failed: " + error.message);
+    } finally {
+      // Show button again if error
+      document.getElementById("signin-button").style.display = "block";
+      document.getElementById("loading-spinner").style.display = "none";
+    }
+  });
+
+if (role === "admin") {
+  const adminSecret = document.getElementById("admin_secret").value;
+  if (adminSecret !== "your-secret-key") {
+    showMessage("Invalid Admin Secret", false);
+    return;
   }
 }
 
