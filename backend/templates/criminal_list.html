@@ -150,21 +150,32 @@
         </nav>
         <!-- Navbar End -->
 
-        <!-- Main Content Start -->
-        <div class="container-fluid pt-4 px-4">
-          <div class="bg-secondary text-center rounded p-4">
-            <h3 class="text-white mb-4">Criminals List</h3>
-            <div class="row" style="display: flex">
-              <div class="col-md-4" id="inner_left_pannel">
+        <div id="wrapper">
+          <div id="left_pannel">
+            <div style="padding: 10px">
+              <img
+                src="{{ url_for('static', filename='images/OIP.jpg') }}"
+                alt="Profile Image"
+              />
+              <br />
+              <span style="font-size: 25px">CrimeConnect</span>
+              <br />
+              <span style="font-size: 12px; opacity: 0.5">cc@gmail.com</span>
+            </div>
+          </div>
+
+          <div id="right_pannel">
+            <div id="header">Criminals List</div>
+            <div id="container" style="display: flex">
+              <div id="inner_left_pannel">
                 <!-- Names will be loaded dynamically -->
               </div>
-              <div class="col-md-8" id="inner_right_pannel">
+              <div id="inner_right_pannel">
                 <!-- Criminal details shown here -->
               </div>
             </div>
           </div>
         </div>
-        <!-- Main Content End -->
 
         <!-- Footer Start -->
         <div class="container-fluid pt-4 px-4">
@@ -189,6 +200,6 @@
     <!-- JS -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   </body>
 </html>

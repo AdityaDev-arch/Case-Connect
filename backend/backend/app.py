@@ -45,8 +45,8 @@ JWT_ALGORITHM = "HS256"
 DB_CONFIG = {
     "dbname": os.getenv("DB_NAME", "case_connect"),
     "user": os.getenv("DB_USER", "postgres"),
-    "password": os.getenv("DB_PASSWORD", "nihar@123"),
-    "host": os.getenv("DB_HOST", "152.57.91.227"),
+    "password": os.getenv("DB_PASSWORD", "aditya@123"),
+    "host": os.getenv("DB_HOST", "localhost"),
     "port": os.getenv("DB_PORT", "5432")
 }
 
@@ -56,11 +56,14 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Function to connect to the database
 def connect_db():
-    try:
-        return psycopg2.connect(**DB_CONFIG)
-    except Exception as e:
-        print(f"Error connecting to the database: {e}")
-        raise
+    conn = psycopg2.connect(
+        dbname='case_connect',
+        user='postgres',
+        password='aditya@123',
+        host='localhost',
+        port='5432'
+    )
+    return conn
 
 # JWT Token Validation Decorator
 def token_required(f):

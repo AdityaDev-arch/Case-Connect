@@ -81,3 +81,38 @@
       });
   });
 })(jQuery);
+window.onload = function () {
+  fetch("/api/criminals")
+    .then((response) => response.json())
+    .then((data) => {
+      const leftPanel = document.getElementById("inner_left_pannel");
+      leftPanel.innerHTML = "";
+      data.forEach((criminal) => {
+        const div = document.createElement("div");
+        div.className = "criminal-name";
+        div.textContent = criminal.name;
+        div.onclick = () => showDetails(criminal.id);
+        leftPanel.appendChild(div);
+      });
+    });
+};
+
+function showDetails(criminalId) {
+  fetch(`/api/criminals/${criminalId}`)
+    .then((response) => response.json())
+    .then((data) => {
+      const detailsContent = document.getElementById("inner_right_pannel");
+      detailsContent.innerHTML = `
+                <img src="${
+                  data.photo_url
+                }" style="width: 200px; border-radius: 10px; margin-top: 10px;"><br>
+                <h3>${data.name}</h3>
+                <p><strong>Age:</strong> ${data.age}</p>
+                <p><strong>Criminal ID:</strong> ${data.criminal_id}</p>
+                <p><strong>Crime:</strong> ${data.crime}</p>
+                <p><strong>In Custody:</strong> ${
+                  data.in_custody ? "Yes" : "No"
+                }</p>
+            `;
+    });
+}

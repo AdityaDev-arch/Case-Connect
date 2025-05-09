@@ -121,6 +121,12 @@
             >
               <i class="fa fa-table me-2"></i>Criminal Details
             </a>
+            <a
+              href="{{ url_for('criminal_list') }}"
+              class="nav-item nav-link {% if request.endpoint == 'criminal_list' %}active{% endif %}"
+            >
+              <i class="fa fa-address-book me-2"></i>Criminal List
+            </a>
           </div>
         </nav>
       </div>
